@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Priority_Queue;
 
-
-class Program
+namespace ContractionHierarchies.Algorithms
 {
-     static void Main(string[] args)
-     {
-
-     }
+    internal class BiDirDijkstra
+    {
+    }
 }
