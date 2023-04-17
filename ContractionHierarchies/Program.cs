@@ -14,7 +14,7 @@ class Program
         //var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\roads.csv";
         //var testGraph = new ProcessGraph(file, 6);
         CurrentNodeEqualityComparer currentNodeEqualityComparer = new CurrentNodeEqualityComparer();
-        SimplePriorityQueue<CurrentNode> priorityQueue = new SimplePriorityQueue<CurrentNode>(currentNodeEqualityComparer);
+        SimplePriorityQueue<CurrentNode, float> priorityQueue = new SimplePriorityQueue<CurrentNode, float>(currentNodeEqualityComparer);
 
         Node nul = new Node(0);
         CurrentNode curNul = new CurrentNode(nul, 0);

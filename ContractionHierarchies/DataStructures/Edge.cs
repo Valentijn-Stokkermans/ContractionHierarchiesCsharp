@@ -8,7 +8,7 @@ namespace ContractionHierarchies.DataStructures
 {
     public struct Edge
     {
-        public Edge(double weight, int target, bool forward, bool backward) 
+        public Edge(float weight, int target, bool forward, bool backward) 
         { 
             this.weight = weight; 
             this.target = target;
@@ -32,7 +32,7 @@ namespace ContractionHierarchies.DataStructures
         }
 
         // weight
-        public double weight;
+        public float weight;
         // target node
         public int target;
         // forward edge

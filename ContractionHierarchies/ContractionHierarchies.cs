@@ -171,7 +171,8 @@ namespace ContractionHierarchies
         }
         private void dijkstra(Node source, double maxCost, int numberOfTargets, int maxSettledNodes) 
         {
-            SimplePriorityQueue<CurrentNode> dijkstraPriorityQueue = new SimplePriorityQueue<CurrentNode>();
+            CurrentNodeEqualityComparer currentNodeEqualityComparer = new CurrentNodeEqualityComparer();
+            SimplePriorityQueue<CurrentNode, float> dijkstraPriorityQueue = new SimplePriorityQueue<CurrentNode, float>(currentNodeEqualityComparer);
 
             CurrentNode u = new CurrentNode(source, 0);
             dijkstraPriorityQueue.Enqueue(u, 0);
@@ -200,9 +201,9 @@ namespace ContractionHierarchies
             }
         }
 
-        private void relaxEdges(CurrentNode parent, bool forward, SimplePriorityQueue<CurrentNode> dijkstraPriorityQueue)
+        private void relaxEdges(CurrentNode parent, bool forward, SimplePriorityQueue<CurrentNode, float> dijkstraPriorityQueue)
         {
-            double parentDistance = parent.distance;
+            float parentDistance = parent.distance;
             int firstEdge = parent.node.startIndex;
             int lastEdge = parent.node.lastIndex;
 
@@ -219,10 +220,17 @@ namespace ContractionHierarchies
                 {
                     continue;
                 }
-
+                
                 // new distance from source of search to target of edge
-                double newDistance = parentDistance + processGraph.edges[i].weight;
-                //dijkstraPriorityQueue.Contains(targetNode);
+                float newDistance = parentDistance + processGraph.edges[i].weight;
+                CurrentNode target = new CurrentNode(targetNode, newDistance);
+                // if new target already in queue remove to update its cost
+                if (dijkstraPriorityQueue.Contains(target))
+                {
+                    dijkstraPriorityQueue.Remove(target);
+                }
+                // enqueue new target
+                dijkstraPriorityQueue.Enqueue(target, newDistance);
             }
         }
         private void Astar(Node node) { }

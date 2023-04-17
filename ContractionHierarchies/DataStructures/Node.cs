@@ -34,13 +34,13 @@ namespace ContractionHierarchies.DataStructures
 
     public class CurrentNode
     {
-        public CurrentNode(Node node, double edgeWeight) 
+        public CurrentNode(Node node, float edgeWeight) 
         { 
             this.node = node;
             distance = edgeWeight;
         }
         public Node node;
-        public double distance = 0;
+        public float distance = 0;
     }
 
     class CurrentNodeEqualityComparer : IEqualityComparer<CurrentNode> 

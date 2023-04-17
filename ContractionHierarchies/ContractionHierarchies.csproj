@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />
+    <ProjectReference Include="..\..\High-Speed-Priority-Queue-for-C-Sharp\Priority Queue\Priority Queue.csproj" />
   </ItemGroup>
 
 </Project>

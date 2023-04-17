@@ -64,16 +64,16 @@ namespace ContractionHierarchies.DataStructures
             // fill nodes and edges lists
             for (int i = 0; i < fields.Count(); i++)
             {
-                var source = int.Parse(fields[i][0]);
-                var target = int.Parse(fields[i][1]);
-                var weight = double.Parse(fields[i][2]);
+                int source = int.Parse(fields[i][0]);
+                int target = int.Parse(fields[i][1]);
+                float weight = float.Parse(fields[i][2]);
 
                 addEdge(source, nodes[source], weight, target, true, true); // add forward edge
                 addEdge(target, nodes[target], weight, source, false, true); // add backward edge
             }
         }
 
-        public void addEdge(int source, Node node, double weight, int target, bool forward, bool init) 
+        public void addEdge(int source, Node node, float weight, int target, bool forward, bool init) 
         {
             // check if edge is already present in other direction
             for (int i = node.startIndex; i <= node.lastIndex; i++)
