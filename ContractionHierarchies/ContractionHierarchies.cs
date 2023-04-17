@@ -3,6 +3,7 @@ using Priority_Queue;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -77,7 +78,7 @@ namespace ContractionHierarchies
         {
             int firstEdge = node.startIndex;
             int lastEdge = node.lastIndex;
-            double cost = 0;
+            float maxCostToTarget = 0;
 
             // set nodes of outgoing edges as targets
             int numberOfTargets = 0;
@@ -93,9 +94,9 @@ namespace ContractionHierarchies
                     }
 
                     // cost to outgoing node, find largest
-                    if (cost < processGraph.edges[i].weight)
+                    if (maxCostToTarget < processGraph.edges[i].weight)
                     {
-                        cost = processGraph.edges[i].weight; 
+                        maxCostToTarget = processGraph.edges[i].weight; 
                     }
 
                     processGraph.nodes[targetNode].searchTarget = true;
@@ -128,12 +129,13 @@ namespace ContractionHierarchies
                     {
                         continue;
                     }
-                    double maxCost = cost + processGraph.edges[i].weight; // add cost from source to max cost to targets
+                    float costFromSource = processGraph.edges[i].weight; // add cost from source to max cost to targets
+                    float maxCost = costFromSource + maxCostToTarget; // add cost from source to max cost to targets
                     switch (chooseType)
                     {
                         case 0:
                             // use dijkstra
-                            dijkstra(processGraph.nodes[sourceNode], maxCost, numberOfTargets, maxSettledNodes);
+                            dijkstra(processGraph.nodes[sourceNode], maxCost, numberOfTargets, maxSettledNodes, node.id, costFromSource, simulate);
                             break;
                         case 1:
                             // use A*
@@ -148,28 +150,8 @@ namespace ContractionHierarchies
             {
                 node.contracted = false;
             }
-
-            // set targets back to false
-            for (int i = firstEdge; i <= lastEdge; i++)
-            {
-                // stop early if all targets have been found
-                if (numberOfTargets == 0)
-                {
-                    break;
-                }
-                if (processGraph.edges[i].forward)
-                {
-                    int targetNode = processGraph.edges[i].target;
-                    // check if node is searchTarget
-                    if (processGraph.nodes[targetNode].searchTarget)
-                    {
-                        processGraph.nodes[targetNode].searchTarget = false;
-                        numberOfTargets--;
-                    }
-                }
-            }
         }
-        private void dijkstra(Node source, double maxCost, int numberOfTargets, int maxSettledNodes) 
+        private int dijkstra(Node source, double maxCost, int numberOfTargets, int maxSettledNodes, int middleNodeID, float costToMiddleNode, bool simulate) 
         {
             CurrentNodeEqualityComparer currentNodeEqualityComparer = new CurrentNodeEqualityComparer();
             SimplePriorityQueue<CurrentNode, float> dijkstraPriorityQueue = new SimplePriorityQueue<CurrentNode, float>(currentNodeEqualityComparer);
@@ -177,28 +159,75 @@ namespace ContractionHierarchies
             CurrentNode u = new CurrentNode(source, 0);
             dijkstraPriorityQueue.Enqueue(u, 0);
 
+            int ShortcutsAdded = 0;
+
             while(priorityQueue.Count != 0)
             {
-                if (numberOfTargets == 0)
+                // limit the search space, if targets have not been found add a shortcut to them
+                if (maxSettledNodes == 0)
                 {
-                    return;
+                    // add shortcuts 
+                    int firstEdge = processGraph.nodes[middleNodeID].startIndex;
+                    int lastEdge = processGraph.nodes[middleNodeID].lastIndex;
+                    for (int i = firstEdge; i <= lastEdge; i++)
+                    {
+                        // check if forward edge and searchTarget
+                        if (!processGraph.edges[i].forward || 
+                            !processGraph.nodes[processGraph.edges[i].target].searchTarget)
+                        {
+                            continue;
+                        }
+                        Node targetNode = processGraph.nodes[processGraph.edges[i].target];
+                        float cost = costToMiddleNode + processGraph.edges[i].weight;
+                        processGraph.addEdge(source.id, source, cost, targetNode.id, true, true); // add forward edge
+                        processGraph.addEdge(targetNode.id, targetNode, cost, source.id, false, true); // add backward edge
+                        targetNode.searchTarget = false;
+                        ShortcutsAdded++;
+                    }
+                    return ShortcutsAdded;
                 }
 
                 u = dijkstraPriorityQueue.Dequeue();
-
-                if (u.distance > maxCost || maxSettledNodes == 0)
-                {
-                    return;
-                }
                 maxSettledNodes--;
+
+                if (numberOfTargets == 0 || u.distance > maxCost)
+                {
+                    return ShortcutsAdded;
+                }
 
                 if (u.node.searchTarget) 
                 {
+                    // add shortcut if cost is smaller
+                    float cost = 0;
+                    // find cost from u to middleNode
+                    for (int i = u.node.startIndex; i <= u.node.lastIndex; i++)
+                    {
+                        if (!processGraph.edges[i].backward)
+                        {
+                            continue;
+                        }
+                        if (processGraph.edges[i].target == middleNodeID)
+                        {
+                            cost = costToMiddleNode + processGraph.edges[i].weight;
+                            break;
+                        }
+                    }
+                    if (u.distance < cost) 
+                    {
+                        if (!simulate)
+                        {
+                            // add shortcut
+                            processGraph.addEdge(source.id, source, u.distance, u.node.id, true, true); // add forward edge
+                            processGraph.addEdge(u.node.id, u.node, u.distance, source.id, false, true); // add backward edge
+                        }
+                        ShortcutsAdded++;
+                    }
+                    u.node.searchTarget = false;
                     numberOfTargets--;
                 }
-
                 relaxEdges(u, true, dijkstraPriorityQueue);
             }
+            return ShortcutsAdded;
         }
 
         private void relaxEdges(CurrentNode parent, bool forward, SimplePriorityQueue<CurrentNode, float> dijkstraPriorityQueue)
@@ -207,7 +236,7 @@ namespace ContractionHierarchies
             int firstEdge = parent.node.startIndex;
             int lastEdge = parent.node.lastIndex;
 
-            for (int i = firstEdge; i < lastEdge; i++)
+            for (int i = firstEdge; i <= lastEdge; i++)
             {
                 Node targetNode = processGraph.nodes[processGraph.edges[i].target];
                 if (targetNode.contracted)

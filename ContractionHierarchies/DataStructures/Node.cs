@@ -30,6 +30,8 @@ namespace ContractionHierarchies.DataStructures
         public bool searchTarget;
         // node level, order of contraction
         public int nodeLevel;
+        // node id, index in nodes array
+        public int id;
     }
 
     public class CurrentNode
