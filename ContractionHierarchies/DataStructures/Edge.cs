@@ -19,6 +19,7 @@ namespace ContractionHierarchies.DataStructures
             shortcutPointer = -1;
         }
 
+        // empty edge
         public Edge()
         {
             weight = -1;

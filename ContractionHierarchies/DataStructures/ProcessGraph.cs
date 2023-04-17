@@ -9,16 +9,21 @@ namespace ContractionHierarchies.DataStructures
 {
     internal class ProcessGraph
     {
-        List<Node> nodes;
-        List<Edge> edges;
+        public List<Node> nodes { get; set; }
+        public List<Edge> edges { get; set; }
+        int edgeGroupSize { get; set; }
 
-        public ProcessGraph(string inputCSV) 
+        public ProcessGraph(string inputCSV, int edgeGroupSize) 
         {
-            generateGraph(inputCSV);
+            this.edgeGroupSize = edgeGroupSize;
+            makeGraphFromCSV(inputCSV);
         }
 
-        public void generateGraph(string inputCSV)
+        public void makeGraphFromCSV(string inputCSV)
         {
+            // expects a csv file with source_id, target_id, weight
+            // with node id's starting at 0
+
             // read all lines and store temporarily in fields
             List<string[]> fields = new List<string[]> { };
             using (TextFieldParser parser = new TextFieldParser(inputCSV))
@@ -33,28 +38,28 @@ namespace ContractionHierarchies.DataStructures
             }
             fields.RemoveAt(0); // drop column description
 
-            // used to count unique nodes
-            HashSet<int> countNodes = new HashSet<int>();
-
             // count nodes
+            int largestNode = 0;
             for (int i = 0; i < fields.Count(); i++)
             {
-                if(countNodes.Add(int.Parse(fields[i][0])));
+                int node = int.Parse(fields[i][0]);
+                if (node > largestNode)
+                {
+                    largestNode = node;
+                }
             }
 
             // initialize the nodes and edges lists.
-            nodes = new List<Node>(countNodes.Count);
-            for (int i = 0; i < countNodes.Count; i++)
+            nodes = new List<Node>(largestNode);
+            edges = new List<Edge>(largestNode * edgeGroupSize); // normally max 4 edges per node for both directions, 2 spaces left for shortcuts
+            for (int i = 0; i <= largestNode; i++)
             {
-                nodes[i] = new Node(i);
+                nodes.Add(new Node(i));
+                for (int j = 0; j < edgeGroupSize; j++)
+                {
+                    edges.Add(new Edge());
+                }
             }
-            edges = new List<Edge>(countNodes.Count * 6); // normally max 4 edges per node for both directions, 2 spaces left for shortcuts
-            
-            for (int i = 0; i < countNodes.Count * 6; i++)
-            {
-                edges[i] = new Edge();
-            }
-
 
             // fill nodes and edges lists
             for (int i = 0; i < fields.Count(); i++)
@@ -90,18 +95,21 @@ namespace ContractionHierarchies.DataStructures
                 }
             }
 
-            // first edge of node exception
-            if (edges[node.lastIndex].target == -1)
-            {
-                edges[node.lastIndex] = new Edge(weight, target, forward, !forward);
-                return;
-            }
-
             // check if there is still room
             if (edges[node.lastIndex + 1].target == -1) 
-            { 
-                // check if not init phase and over the max 6 initial spots
-                if (!(init && node.startIndex + 5 == node.lastIndex))
+            {
+                // check if init phase
+                if (init)
+                {
+                    // check if not over the max edgeGroupSize initial spots
+                    if (node.lastIndex < node.startIndex + edgeGroupSize - 1)
+                    {
+                        edges[node.lastIndex + 1] = new Edge();
+                        node.lastIndex++;
+                        return;
+                    }
+                } 
+                else 
                 {
                     edges[node.lastIndex + 1] = new Edge();
                     node.lastIndex++;
@@ -111,19 +119,30 @@ namespace ContractionHierarchies.DataStructures
 
             // if no free spot is found transfer all edges to a new area at the end of the list, old area is free space
             int newStart = edges.Count;
-            int count = 1 + node.lastIndex - node.startIndex;
-            edges.AddRange(edges.GetRange(node.startIndex, count));
+            int numberOfEdges = 1 + node.lastIndex - node.startIndex;
+            // transfer edges
+            edges.AddRange(edges.GetRange(node.startIndex, numberOfEdges));
+            // add new edge
             edges.Add(new Edge(weight, target, forward, !forward));
             // create new extra space, dubble the original size of the edge group
-            for (int i = 0; i < node.lastIndex - node.startIndex; i++)
+            for (int i = 0; i <= numberOfEdges; i++)
             {
                 edges.Add(new Edge());
             }
+            // clear old edges
+            for (int i = node.startIndex; i <= node.lastIndex; i++)
+            {
+                edges[i] = new Edge();
+            }
             // update node indexes
             node.startIndex = newStart;
-            node.lastIndex = newStart + count - 1;
+            node.lastIndex = newStart + numberOfEdges - 1;
             return;
         }
 
+        public int nodesSize()
+        {
+            return nodes.Count;
+        }
     }
 }
