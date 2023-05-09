@@ -54,7 +54,7 @@ namespace ContractionHierarchies.DataStructures
             edges = new List<Edge>(largestNode * edgeGroupSize); // normally max 4 edges per node for both directions, 2 spaces left for shortcuts
             for (int i = 0; i <= largestNode; i++)
             {
-                nodes.Add(new Node(i));
+                nodes.Add(new Node(i, i*edgeGroupSize));
                 for (int j = 0; j < edgeGroupSize; j++)
                 {
                     edges.Add(new Edge());
@@ -104,14 +104,14 @@ namespace ContractionHierarchies.DataStructures
                     // check if not over the max edgeGroupSize initial spots
                     if (node.lastIndex < node.startIndex + edgeGroupSize - 1)
                     {
-                        edges[node.lastIndex + 1] = new Edge();
+                        edges[node.lastIndex + 1] = new Edge(weight, target, forward, !forward);
                         node.lastIndex++;
                         return;
                     }
                 } 
                 else 
                 {
-                    edges[node.lastIndex + 1] = new Edge();
+                    edges[node.lastIndex + 1] = new Edge(weight, target, forward, !forward);
                     node.lastIndex++;
                     return;
                 }
@@ -143,6 +143,24 @@ namespace ContractionHierarchies.DataStructures
         public int nodesSize()
         {
             return nodes.Count;
+        }
+
+        public void printProcessGraph()
+        {
+            Console.WriteLine("ProcessGraph:");
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                Node node = nodes[i];
+                Console.WriteLine("Node: " + node.id);
+                int startEdges = node.startIndex;
+                int endEdges = node.lastIndex;
+                for (int j = startEdges; j <= endEdges; j++)
+                {
+                    Edge edge = edges[j];
+                    if (edge.forward)
+                        Console.WriteLine(edge.target);
+                }
+            }
         }
     }
 }

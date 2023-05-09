@@ -7,6 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContractionHierarchies", "C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Priority Queue", "..\High-Speed-Priority-Queue-for-C-Sharp\Priority Queue\Priority Queue.csproj", "{1531C1EA-BD53-41D1-A34B-CFCDF79D2651}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Testing", "Testing\Testing.csproj", "{BDD97DC7-112A-4B8C-BD58-C14815D89246}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9AC7BA04-FB2E-445E-A1FF-3750CC8106F4} = {9AC7BA04-FB2E-445E-A1FF-3750CC8106F4}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +36,14 @@ Global
 		{1531C1EA-BD53-41D1-A34B-CFCDF79D2651}.Release 4.5|Any CPU.Build.0 = Release 4.5|Any CPU
 		{1531C1EA-BD53-41D1-A34B-CFCDF79D2651}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1531C1EA-BD53-41D1-A34B-CFCDF79D2651}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDD97DC7-112A-4B8C-BD58-C14815D89246}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDD97DC7-112A-4B8C-BD58-C14815D89246}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDD97DC7-112A-4B8C-BD58-C14815D89246}.Release 2.0|Any CPU.ActiveCfg = Release|Any CPU
+		{BDD97DC7-112A-4B8C-BD58-C14815D89246}.Release 2.0|Any CPU.Build.0 = Release|Any CPU
+		{BDD97DC7-112A-4B8C-BD58-C14815D89246}.Release 4.5|Any CPU.ActiveCfg = Release|Any CPU
+		{BDD97DC7-112A-4B8C-BD58-C14815D89246}.Release 4.5|Any CPU.Build.0 = Release|Any CPU
+		{BDD97DC7-112A-4B8C-BD58-C14815D89246}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDD97DC7-112A-4B8C-BD58-C14815D89246}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
