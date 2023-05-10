@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualBasic.FileIO;
 using ContractionHierarchies;
+using ContractionHierarchies.DataStructures;
 
 namespace Testing
 {
@@ -59,8 +60,8 @@ namespace Testing
             var maxSettledNodes = 100;
             var edgeGroupSize = 10;
             var ch = new ContractionHierarchie(file, edgeGroupSize);
-            ch.preprocess(1, 0, maxSettledNodes);
-            ch.createSearchGraph();
+            ch.PreProcess(1, 0, maxSettledNodes);
+            ch.CreateSearchGraph();
 
             watchPrepCH.Stop();
             long elapsedMSPrepCH = watchPrepCH.ElapsedMilliseconds;
@@ -73,25 +74,31 @@ namespace Testing
 
             Dijkstra t = new Dijkstra(vertices.Count);
             int wrongRes = 0;
+            int correctRes = 0;
 
             for (int i = 0; i < vertices.Count; i++)
             {
-                double[] dist = new double[vertices.Count];
+                double[] dist;
 
                 var watchDijkstra = System.Diagnostics.Stopwatch.StartNew();
                 dist = t.calcDijkstra(adjGraphTemp, i);
                 watchDijkstra.Stop();
-                elapsedMsDijkstra = elapsedMsDijkstra + watchDijkstra.ElapsedMilliseconds;
+                elapsedMsDijkstra += watchDijkstra.ElapsedMilliseconds;
                 var watchCH = System.Diagnostics.Stopwatch.StartNew();
                 for (int j = 0; j < vertices.Count; j++)
                 {
                     //acutal distance computation stage.
-                    float res = ch.query(i, j);
+                    float res = ch.Query(i, j);
                     q++;
                     if (dist[j] != res)
                     {
-                        Console.WriteLine($"\n\n\n\n\n\n\n\n\n\n\n\from: {i} to: {j}, dijkstra: {dist[j]}, CH: {res}\n\n\n\n\n\n\n\n\n");
+                        Console.WriteLine($"\n\n\n\n\n\n\n\n\n\n\nWRONG: from: {i} to: {j}, dijkstra: {dist[j]}, CH: {res}\n\n\n\n\n\n\n\n\n");
                         wrongRes++;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"CORRECT from: {i} to: {j}, dijkstra: {dist[j]}, CH: {res}");
+                        correctRes++;
                     }
                 }
                 watchCH.Stop();
@@ -101,6 +108,7 @@ namespace Testing
             Console.WriteLine($"Total Time: Dijkstra: {elapsedMsDijkstra}, PrepCH: {elapsedMSPrepCH}, CH: {elapsedMsCH}, total: {watchTotal.ElapsedMilliseconds}");
             Console.WriteLine($"One Query Time: Dijkstra: {(double)elapsedMsDijkstra / vertices.Count}, CH: {(double)elapsedMsCH / (vertices.Count * vertices.Count)}");
             Console.WriteLine("Number of wrong results: " + wrongRes);
+            Console.WriteLine("Number of correct results: " + correctRes);
         }
 
         public void testExample()

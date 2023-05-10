@@ -3,65 +3,67 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace ContractionHierarchies.DataStructures
 {
-    internal class SearchGraph
+    public class SearchGraph
     {
-        public List<Node> nodes { get; set; }
-        public List<Edge> edges { get; set; }
-        public SearchGraph(ProcessGraph processGraph) 
+        public SearchNode[] Nodes { get; set; }
+        public Edge[] Edges { get; set; }
+
+        public SearchGraph(ProcessGraph processGraph, int numberOfEdges)
         {
-            edges = new List<Edge>();
-            generateSearchGraph(processGraph);
-            printSearchGraph();
+            Edges = new Edge[numberOfEdges];
+            Nodes = new SearchNode[processGraph.NodesSize];
+            GenerateSearchGraph(processGraph);
+            PrintSearchGraph();
         }
 
-        private void generateSearchGraph(ProcessGraph processGraph) 
+        private void GenerateSearchGraph(ProcessGraph processGraph) 
         {
-            int startIndex = 0;
+            int startIndex;
             int lastIndex = 0;
-            nodes = new List<Node>(processGraph.nodesSize());
-            for (int i = 0; i < processGraph.nodesSize(); i++) 
+            for (int i = 0; i < processGraph.NodesSize; i++) 
             {
-                Node oldNode = processGraph.nodes[i];
-                int firstEdge = oldNode.startIndex;
-                int lastEdge = oldNode.lastIndex;
-                int nodeLevel = oldNode.nodeLevel;
+                ProcessNode oldNode = processGraph.Nodes[i];
+                int firstEdge = oldNode.FirstIndex;
+                int lastEdge = oldNode.LastIndex;
+                int nodeLevel = oldNode.NodeLevel;
                 startIndex = lastIndex;
                 // add edges
                 for (int j = firstEdge; j <= lastEdge; j++)
                 {
-                    Edge oldEdge = processGraph.edges[j];
-                    if (oldEdge.target == -1)
+                    Edge oldEdge = processGraph.Edges[j];
+                    if (oldEdge.Target == -1)
                     {
                         continue;
                     }
                     // check if edge is in upward graph or reverse downward graph
-                    if (processGraph.nodes[oldEdge.target].nodeLevel > nodeLevel)
+                    if (processGraph.Nodes[oldEdge.Target].NodeLevel > nodeLevel)
                     {
-                        edges.Add(oldEdge);
+                        Edges[lastIndex] = oldEdge;
                         lastIndex++;
                     }
                 }
                 // add node
-                nodes.Add(new Node(i, startIndex, lastIndex - 1, oldNode.nodeLevel));
+                Nodes[i] = new SearchNode(i, startIndex, lastIndex - 1);
             }
         }
 
-        public void printSearchGraph()
+        public void PrintSearchGraph()
         {
             Console.WriteLine("SearchGraph:");
-            for ( int i = 0; i < nodes.Count; i++)
+            for ( int i = 0; i < Nodes.Length; i++)
             {
-                Node node = nodes[i];
-                Console.WriteLine("Node: " + node.id + " imp: " + node.nodeLevel);
-                int startEdges = node.startIndex;
-                int endEdges = node.lastIndex;
+                SearchNode node = Nodes[i];
+                Console.WriteLine("Node: " + node.ID + " distance: " + node.Distance + " settledFroward: " + node.SettledForward + " settledBackward: " + node.SettledBackward);
+                int startEdges = node.FirstIndex;
+                int endEdges = node.LastIndex;
                 for ( int j = startEdges; j <= endEdges; j++)
                 {
-                    Edge edge = edges[j];
-                    Console.WriteLine("target: " + edge.target + " weight: " + edge.weight + " forward: " + edge.forward + " backward: " + edge.backward);
+                    Edge edge = Edges[j];
+                    Console.WriteLine("target: " + edge.Target + " weight: " + edge.Weight + " forward: " + edge.Forward + " backward: " + edge.Backward);
                 }
             }
         }

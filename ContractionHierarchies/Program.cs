@@ -17,9 +17,9 @@ class Program
 
         var watchPrepCH = System.Diagnostics.Stopwatch.StartNew();
         var ch = new ContractionHierarchie(file, edgeGroupSize);
-        ch.preprocess(1, 0, maxSettledNodes);
-        ch.createSearchGraph();
-        Console.WriteLine(ch.query(0, 6));
+        ch.PreProcess(1, 0, maxSettledNodes);
+        ch.CreateSearchGraph();
+        Console.WriteLine(ch.Query(8, 1));
         watchPrepCH.Stop();
         long elapsedMSPrepCH = watchPrepCH.ElapsedMilliseconds;
         Console.WriteLine("time:" + elapsedMSPrepCH);

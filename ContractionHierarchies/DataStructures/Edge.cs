@@ -10,41 +10,24 @@ namespace ContractionHierarchies.DataStructures
     {
         public Edge(float weight, int target, bool forward, bool backward) 
         { 
-            this.weight = weight; 
-            this.target = target;
-            this.forward = forward;
-            this.backward = backward;
-            contracted = false;
-            shortcut = false;
-            shortcutPointer = -1;
+            Weight = weight; 
+            Target = target;
+            Forward = forward;
+            Backward = backward;
         }
 
         // empty edge
-        public Edge()
-        {
-            weight = -1;
-            target = -1;
-            forward = false;
-            backward = false;
-            contracted = false;
-            shortcut = false;
-            shortcutPointer = -1;
-        }
+        public Edge() { }
 
         // weight
-        public float weight;
+        public float Weight { get; set; } = -1;
         // target node
-        public int target;
+        public int Target { get; set; } = -1;
         // forward edge
-        public bool forward;
+        public bool Forward { get; set; } = false;
         // reverse edge for backward search
-        public bool backward;
+        public bool Backward { get; set; } = false;
         // contracted
-        public bool contracted;
-        // shortcut
-        public bool shortcut;
-        // shortcut pointer to contracted node
-        public int shortcutPointer;
-
+        public bool Contracted { get; set; } = false;
     }
 }

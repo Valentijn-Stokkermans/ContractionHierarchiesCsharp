@@ -4,22 +4,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ContractionHierarchies.DataStructures
 {
-    internal class ProcessGraph
+    public class ProcessGraph
     {
-        public List<Node> nodes { get; set; }
-        public List<Edge> edges { get; set; }
-        int edgeGroupSize { get; set; }
+        public ProcessNode[] Nodes { get; set; }
+        public List<Edge> Edges { get; set; }
+        int EdgeGroupSize { get; set; }
 
         public ProcessGraph(string inputCSV, int edgeGroupSize) 
         {
-            this.edgeGroupSize = edgeGroupSize;
-            makeGraphFromCSV(inputCSV);
+            EdgeGroupSize = edgeGroupSize;
+            MakeGraphFromCSV(inputCSV);
         }
 
-        public void makeGraphFromCSV(string inputCSV)
+        public void MakeGraphFromCSV(string inputCSV)
         {
             // expects a csv file with source_id, target_id, weight
             // with node id's starting at 0
@@ -50,14 +52,14 @@ namespace ContractionHierarchies.DataStructures
             }
 
             // initialize the nodes and edges lists.
-            nodes = new List<Node>(largestNode);
-            edges = new List<Edge>(largestNode * edgeGroupSize); // normally max 4 edges per node for both directions, 2 spaces left for shortcuts
+            Nodes = new ProcessNode[largestNode+1];
+            Edges = new List<Edge>(largestNode * EdgeGroupSize); // normally max 4 edges per node for both directions, 2 spaces left for shortcuts
             for (int i = 0; i <= largestNode; i++)
             {
-                nodes.Add(new Node(i, i*edgeGroupSize));
-                for (int j = 0; j < edgeGroupSize; j++)
+                Nodes[i] = new ProcessNode(i, i*EdgeGroupSize);
+                for (int j = 0; j < EdgeGroupSize; j++)
                 {
-                    edges.Add(new Edge());
+                    Edges.Add(new Edge());
                 }
             }
 
@@ -67,98 +69,127 @@ namespace ContractionHierarchies.DataStructures
                 int source = int.Parse(fields[i][0]);
                 int target = int.Parse(fields[i][1]);
                 float weight = float.Parse(fields[i][2]);
-
-                addEdge(source, nodes[source], weight, target, true, true); // add forward edge
-                addEdge(target, nodes[target], weight, source, false, true); // add backward edge
+                
+                AddEdgeToProcessNode(source, Nodes[source], weight, target, true, true); // add forward edge
+                AddEdgeToProcessNode(target, Nodes[target], weight, source, false, true); // add backward edge
             }
         }
 
-        public void addEdge(int source, Node node, float weight, int target, bool forward, bool init) 
+        public void AddEdgeToProcessNode(int source, ProcessNode node, float weight, int target, bool forward, bool init) 
         {
             // check if edge is already present in other direction
-            for (int i = node.startIndex; i <= node.lastIndex; i++)
+            for (int i = node.FirstIndex; i <= node.LastIndex; i++)
             {
-                if (edges[i].target == target)
+                if (Edges[i].Target == target)
                 {
                     // add other direction to existing edge
-                    Edge edge = edges[i];
+                    Edge edge = Edges[i];
                     if (forward) 
                     { 
-                        edge.forward = true;
+                        edge.Forward = true;
                     }
                     else
                     {
-                        edge.backward = true;
+                        edge.Backward = true;
                     }
-                    edges[i] = edge;
+                    Edges[i] = edge;
                     return;
                 }
             }
 
             // check if there is still room
-            if (edges[node.lastIndex + 1].target == -1) 
+            if (Edges[node.LastIndex + 1].Target == -1) 
             {
                 // check if init phase
                 if (init)
                 {
                     // check if not over the max edgeGroupSize initial spots
-                    if (node.lastIndex < node.startIndex + edgeGroupSize - 1)
+                    if (node.LastIndex < node.FirstIndex + EdgeGroupSize - 1)
                     {
-                        edges[node.lastIndex + 1] = new Edge(weight, target, forward, !forward);
-                        node.lastIndex++;
+                        Edges[node.LastIndex + 1] = new Edge(weight, target, forward, !forward);
+                        node.LastIndex++;
                         return;
                     }
                 } 
                 else 
                 {
-                    edges[node.lastIndex + 1] = new Edge(weight, target, forward, !forward);
-                    node.lastIndex++;
+                    Edges[node.LastIndex + 1] = new Edge(weight, target, forward, !forward);
+                    node.LastIndex++;
                     return;
                 }
             }
 
             // if no free spot is found transfer all edges to a new area at the end of the list, old area is free space
-            int newStart = edges.Count;
-            int numberOfEdges = 1 + node.lastIndex - node.startIndex;
+            int newStart = Edges.Count;
+            int numberOfEdges = 1 + node.LastIndex - node.FirstIndex;
             // transfer edges
-            edges.AddRange(edges.GetRange(node.startIndex, numberOfEdges));
+            Edges.AddRange(Edges.GetRange(node.FirstIndex, numberOfEdges));
             // add new edge
-            edges.Add(new Edge(weight, target, forward, !forward));
+            Edges.Add(new Edge(weight, target, forward, !forward));
             // create new extra space, dubble the original size of the edge group
             for (int i = 0; i <= numberOfEdges; i++)
             {
-                edges.Add(new Edge());
+                Edges.Add(new Edge());
             }
             // clear old edges
-            for (int i = node.startIndex; i <= node.lastIndex; i++)
+            for (int i = node.FirstIndex; i <= node.LastIndex; i++)
             {
-                edges[i] = new Edge();
+                Edges[i] = new Edge();
             }
             // update node indexes
-            node.startIndex = newStart;
-            node.lastIndex = newStart + numberOfEdges - 1;
+            node.FirstIndex = newStart;
+            node.LastIndex = newStart + numberOfEdges - 1;
             return;
         }
 
-        public int nodesSize()
-        {
-            return nodes.Count;
+        public int NodesSize { get
+            {
+                return Nodes.Length;
+            } 
         }
 
-        public void printProcessGraph()
+        public int EdgesSize { get
+            {
+                int edges = 0;
+                for (int i = 0; i < NodesSize; i++)
+                {
+                    ProcessNode oldNode = Nodes[i];
+                    int firstEdge = oldNode.FirstIndex;
+                    int lastEdge = oldNode.LastIndex;
+                    int nodeLevel = oldNode.NodeLevel;
+                    // add edges
+                    for (int j = firstEdge; j <= lastEdge; j++)
+                    {
+                        Edge oldEdge = Edges[j];
+                        if (oldEdge.Target == -1)
+                        {
+                            continue;
+                        }
+                        // check if edge is in upward graph or reverse downward graph
+                        if (Nodes[oldEdge.Target].NodeLevel > nodeLevel)
+                        {
+                            edges++;
+                        }
+                    }
+                }
+                return edges;
+            }
+        }
+
+        public void PrintProcessGraph()
         {
             Console.WriteLine("ProcessGraph:");
-            for (int i = 0; i < nodes.Count; i++)
+            for (int i = 0; i < Nodes.Length; i++)
             {
-                Node node = nodes[i];
-                Console.WriteLine("Node: " + node.id);
-                int startEdges = node.startIndex;
-                int endEdges = node.lastIndex;
+                ProcessNode node = Nodes[i];
+                Console.WriteLine("Node: " + node.ID);
+                int startEdges = node.FirstIndex;
+                int endEdges = node.LastIndex;
                 for (int j = startEdges; j <= endEdges; j++)
                 {
-                    Edge edge = edges[j];
-                    if (edge.forward)
-                        Console.WriteLine(edge.target);
+                    Edge edge = Edges[j];
+                    if (edge.Forward)
+                        Console.WriteLine("target: " + edge.Target + " weight: " + edge.Weight + " forward: " + edge.Forward + " backward: " + edge.Backward);
                 }
             }
         }
