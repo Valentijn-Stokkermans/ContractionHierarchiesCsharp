@@ -17,7 +17,6 @@ namespace ContractionHierarchies.DataStructures
             Edges = new Edge[numberOfEdges];
             Nodes = new SearchNode[processGraph.NodesSize];
             GenerateSearchGraph(processGraph);
-            PrintSearchGraph();
         }
 
         private void GenerateSearchGraph(ProcessGraph processGraph) 

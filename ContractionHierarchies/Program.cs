@@ -11,7 +11,7 @@ class Program
 {
      static void Main(string[] args)
      {
-        var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\example_graph.csv";
+        var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\roads.csv";
         var maxSettledNodes = 100;
         var edgeGroupSize = 10;
 
