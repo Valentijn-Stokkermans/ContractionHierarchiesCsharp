@@ -19,7 +19,7 @@ class Program
         var ch = new ContractionHierarchie(file, edgeGroupSize);
         ch.preprocess(1, 0, maxSettledNodes);
         ch.createSearchGraph();
-        Console.WriteLine(ch.query(1, 10));
+        Console.WriteLine(ch.query(0, 6));
         watchPrepCH.Stop();
         long elapsedMSPrepCH = watchPrepCH.ElapsedMilliseconds;
         Console.WriteLine("time:" + elapsedMSPrepCH);

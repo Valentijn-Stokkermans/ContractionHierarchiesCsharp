@@ -61,7 +61,7 @@ namespace ContractionHierarchies.DataStructures
                 for ( int j = startEdges; j <= endEdges; j++)
                 {
                     Edge edge = edges[j];
-                    Console.WriteLine(edge.target);
+                    Console.WriteLine("target: " + edge.target + " weight: " + edge.weight + " forward: " + edge.forward + " backward: " + edge.backward);
                 }
             }
         }

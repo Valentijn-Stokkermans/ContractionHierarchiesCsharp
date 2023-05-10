@@ -72,6 +72,7 @@ namespace Testing
             long elapsedMsCH = 0;
 
             Dijkstra t = new Dijkstra(vertices.Count);
+            int wrongRes = 0;
 
             for (int i = 0; i < vertices.Count; i++)
             {
@@ -89,7 +90,8 @@ namespace Testing
                     q++;
                     if (dist[j] != res)
                     {
-                        Console.WriteLine($"from: {i} to: {j}, dijkstra: {dist[j]}, CH: {res}");
+                        Console.WriteLine($"\n\n\n\n\n\n\n\n\n\n\n\from: {i} to: {j}, dijkstra: {dist[j]}, CH: {res}\n\n\n\n\n\n\n\n\n");
+                        wrongRes++;
                     }
                 }
                 watchCH.Stop();
@@ -98,6 +100,7 @@ namespace Testing
             watchTotal.Stop();
             Console.WriteLine($"Total Time: Dijkstra: {elapsedMsDijkstra}, PrepCH: {elapsedMSPrepCH}, CH: {elapsedMsCH}, total: {watchTotal.ElapsedMilliseconds}");
             Console.WriteLine($"One Query Time: Dijkstra: {(double)elapsedMsDijkstra / vertices.Count}, CH: {(double)elapsedMsCH / (vertices.Count * vertices.Count)}");
+            Console.WriteLine("Number of wrong results: " + wrongRes);
         }
 
         public void testExample()
