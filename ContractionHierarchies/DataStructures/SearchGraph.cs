@@ -10,12 +10,14 @@ namespace ContractionHierarchies.DataStructures
     public class SearchGraph
     {
         public SearchNode[] Nodes { get; set; }
+        public SearchNode[] NodesBackup { get; set; }
         public Edge[] Edges { get; set; }
 
         public SearchGraph(ProcessGraph processGraph, int numberOfEdges)
         {
             Edges = new Edge[numberOfEdges];
             Nodes = new SearchNode[processGraph.NodesSize];
+            NodesBackup = new SearchNode[processGraph.NodesSize];
             GenerateSearchGraph(processGraph);
         }
 
@@ -47,6 +49,7 @@ namespace ContractionHierarchies.DataStructures
                 }
                 // add node
                 Nodes[i] = new SearchNode(i, startIndex, lastIndex - 1);
+                NodesBackup[i] = new SearchNode(i, startIndex, lastIndex - 1);
             }
         }
 

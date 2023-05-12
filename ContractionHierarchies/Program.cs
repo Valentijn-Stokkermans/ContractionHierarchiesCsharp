@@ -25,8 +25,8 @@ class Program
         string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\CSVQuery.csv";
 
         // preprocess
-        var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
         var ch = new ContractionHierarchie(graphFile, edgeGroupSize);
+        var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
         ch.PreProcess(1, 0, maxSettledNodes);
         ch.CreateSearchGraph();
         watchPreprocessing.Stop();

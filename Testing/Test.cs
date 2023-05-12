@@ -9,13 +9,14 @@ using ContractionHierarchies.DataStructures;
 
 namespace Testing
 {
-    internal class Test
+    internal static class Test
     {
-        public void TestCorrectness(int size)
+        public static void TestCorrectness()
         {
-            GraphGen newGraph = new GraphGen(size);
-            newGraph.genMatrix();
-            var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\small_directed_graph.csv";
+            //int size = 10;
+            //GraphGen newGraph = new GraphGen(size);
+            //newGraph.genMatrix();
+            var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\example_graph.csv";
             List<string[]> fields = new List<string[]> { };
             using (TextFieldParser parser = new TextFieldParser(file))
             {
@@ -111,7 +112,7 @@ namespace Testing
             Console.WriteLine("Number of correct results: " + correctRes);
         }
 
-        public void TestCorrectnessSmallDirectedGraph()
+        public static void TestCorrectnessSmallDirectedGraph()
         {
             var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\small_directed_graph.csv";
 
@@ -153,7 +154,7 @@ namespace Testing
             //Console.WriteLine("Number of correct results: " + correctRes);
         }
 
-        public void testExample()
+        public static void testExample()
         {
             List<string[]> fields = new List<string[]> { };
             using (TextFieldParser parser = new TextFieldParser(@"C:\Users\valentijn\source\repos\GraphTest\Valentijn\data\roads.csv"))
@@ -212,7 +213,7 @@ namespace Testing
             Console.WriteLine($"Total Time: PrepCH: {elapsedMSPrepCH} ms, CH: {elapsedMsCH} ms");
         }
 
-        public void testPerformance(int size, int runs)
+        public static void testPerformance(int size, int runs)
         {
             GraphGen newGraph = new GraphGen(size);
             newGraph.genMatrix();
@@ -272,7 +273,7 @@ namespace Testing
             Console.WriteLine($"Average Query Time over {runs} querys: CH: {(double)elapsedMsCH / runs} ms");
         }
 
-        public int random_except_list(int n, HashSet<int> x)
+        public static int random_except_list(int n, HashSet<int> x)
         {
             Random r = new Random();
             int result = 0;

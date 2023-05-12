@@ -70,20 +70,20 @@ namespace ContractionHierarchies.DataStructures
                 int target = int.Parse(fields[i][1]);
                 float weight = float.Parse(fields[i][2]);
                 
-                AddEdgeToProcessNode(source, Nodes[source], weight, target, true, true); // add forward edge
-                AddEdgeToProcessNode(target, Nodes[target], weight, source, false, true); // add backward edge
+                AddEdgeToProcessNode(Nodes[source], weight, target, true, true); // add forward edge
+                AddEdgeToProcessNode(Nodes[target], weight, source, false, true); // add backward edge
             }
         }
 
-        public void AddEdgeToProcessNode(int source, ProcessNode node, float weight, int target, bool forward, bool init) 
+        public void AddEdgeToProcessNode(ProcessNode node, float weight, int target, bool forward, bool init) 
         {
             // check if edge is already present in other direction
             for (int i = node.FirstIndex; i <= node.LastIndex; i++)
             {
-                if (Edges[i].Target == target)
+                Edge edge = Edges[i];
+                if (edge.Target == target)
                 {
                     // add other direction to existing edge
-                    Edge edge = Edges[i];
                     if (forward) 
                     { 
                         edge.Forward = true;

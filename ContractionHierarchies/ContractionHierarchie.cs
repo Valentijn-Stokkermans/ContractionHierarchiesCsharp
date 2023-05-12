@@ -73,11 +73,12 @@ namespace ContractionHierarchies
             // importance = incomming Edges * outgoing Edges
             for (int i = node.FirstIndex; i <= node.LastIndex; i++)
             {
-                if (ProcessGraph.Edges[i].Backward)
+                Edge edge = ProcessGraph.Edges[i];
+                if (edge.Backward)
                 {
                     backward++;
                 }
-                if (ProcessGraph.Edges[i].Forward)
+                if (edge.Forward)
                 {
                     forward++;
                 }
@@ -110,22 +111,23 @@ namespace ContractionHierarchies
                     int numberOfTargets = 0;
                     for (int j = firstEdge; j <= lastEdge; j++)
                     {
-                        if (ProcessGraph.Edges[j].Forward) // target
+                        Edge edge = ProcessGraph.Edges[j];
+                        if (edge.Forward) // target
                         {
-                            int targetNode = ProcessGraph.Edges[j].Target;
+                            ProcessNode targetNode = ProcessGraph.Nodes[edge.Target];
                             // check if node is not already Contracted or if it is the source node
-                            if (ProcessGraph.Nodes[targetNode].Contracted || targetNode == sourceNode)
+                            if (targetNode.Contracted || edge.Target == sourceNode)
                             {
                                 continue;
                             }
 
                             // cost to outgoing node, find largest
-                            if (maxCostToTarget < ProcessGraph.Edges[j].Weight)
+                            if (maxCostToTarget < edge.Weight)
                             {
-                                maxCostToTarget = ProcessGraph.Edges[j].Weight;
+                                maxCostToTarget = edge.Weight;
                             }
 
-                            ProcessGraph.Nodes[targetNode].SearchTarget = true;
+                            targetNode.SearchTarget = true;
                             numberOfTargets++;
                         }
                     }
@@ -154,122 +156,110 @@ namespace ContractionHierarchies
 
         private int Dijkstra(ProcessNode source, double maxCost, int numberOfTargets, int maxSettledNodes, int middleNodeID, float costToMiddleNode, bool simulate) 
         {
-            CurrentNodeEqualityComparer currentNodeEqualityComparer = new CurrentNodeEqualityComparer();
-            SimplePriorityQueue<CurrentNode, float> dijkstraPriorityQueue = new SimplePriorityQueue<CurrentNode, float>(currentNodeEqualityComparer);
+            PriorityQueue<ProcessNode, float> dijkstraPriorityQueue = new();
 
-            CurrentNode u = new CurrentNode(source, 0);
-            dijkstraPriorityQueue.Enqueue(u, 0);
+            dijkstraPriorityQueue.Enqueue(source, 0);
 
             int ShortcutsAdded = 0;
 
-            while (dijkstraPriorityQueue.Count != 0)
+            while (dijkstraPriorityQueue.TryDequeue(out ProcessNode currentNode, out float distance))
             {
                 if (numberOfTargets == 0)
                 {
                     return ShortcutsAdded;
                 }
 
-                u = dijkstraPriorityQueue.Dequeue();
                 maxSettledNodes--;
 
-                // limit the search space, if targets have not been found add a shortcut to them
-                if (maxSettledNodes == 0 || u.Distance > maxCost)
+                // limit the search space, if targets have not been found add a shortcut to them or if the distance is larget than the maxcost
+                if (maxSettledNodes == 0 || distance > maxCost)
                 {
                     // add shortcuts 
                     int firstEdge = ProcessGraph.Nodes[middleNodeID].FirstIndex;
                     int lastEdge = ProcessGraph.Nodes[middleNodeID].LastIndex;
                     for (int i = firstEdge; i <= lastEdge; i++)
                     {
+                        Edge edge = ProcessGraph.Edges[i];
                         // check if forward edge and SearchTarget
-                        if (!ProcessGraph.Edges[i].Forward ||
-                            !ProcessGraph.Nodes[ProcessGraph.Edges[i].Target].SearchTarget)
+                        if (!edge.Forward)
                         {
                             continue;
                         }
-                        ProcessNode targetNode = ProcessGraph.Nodes[ProcessGraph.Edges[i].Target];
-                        float cost = costToMiddleNode + ProcessGraph.Edges[i].Weight;
+                        ProcessNode targetNode = ProcessGraph.Nodes[edge.Target];
+                        if (!targetNode.SearchTarget)
+                        {
+                            continue;
+                        }
+                        float cost = costToMiddleNode + edge.Weight;
 
-                        ProcessGraph.AddEdgeToProcessNode(source.ID, source, cost, targetNode.ID, true, true); // add forward edge
-                        ProcessGraph.AddEdgeToProcessNode(targetNode.ID, targetNode, cost, source.ID, false, true); // add backward edge
+                        ProcessGraph.AddEdgeToProcessNode(source, cost, targetNode.ID, true, true); // add forward edge
+                        ProcessGraph.AddEdgeToProcessNode(targetNode, cost, source.ID, false, true); // add backward edge
                         targetNode.SearchTarget = false;
                         ShortcutsAdded++;
                     }
                     return ShortcutsAdded;
                 }
 
-                if (u.Node.SearchTarget)
+                if (currentNode.SearchTarget)
                 {
                     // add shortcut if cost is smaller
                     float cost = 0;
                     // find cost from u to middleNode
-                    for (int i = u.Node.FirstIndex; i <= u.Node.LastIndex; i++)
+                    for (int i = currentNode.FirstIndex; i <= currentNode.LastIndex; i++)
                     {
-                        if (!ProcessGraph.Edges[i].Backward)
+                        Edge edge = ProcessGraph.Edges[i];
+                        if (!edge.Backward)
                         {
                             continue;
                         }
-                        if (ProcessGraph.Edges[i].Target == middleNodeID) 
+                        if (edge.Target == middleNodeID) 
                         {
-                            cost = costToMiddleNode + ProcessGraph.Edges[i].Weight;
+                            cost = costToMiddleNode + edge.Weight;
                             break;
                         }
                     }
-                    if (u.Distance > cost)
+                    if (distance > cost)
                     {
                         if (!simulate)
                         {
                             // add shortcut
-                            ProcessGraph.AddEdgeToProcessNode(source.ID, source, cost, u.Node.ID, true, true); // add forward edge
-                            ProcessGraph.AddEdgeToProcessNode(u.Node.ID, u.Node, cost, source.ID, false, true); // add backward edge
+                            ProcessGraph.AddEdgeToProcessNode(source, cost, currentNode.ID, true, true); // add forward edge
+                            ProcessGraph.AddEdgeToProcessNode(currentNode, cost, source.ID, false, true); // add backward edge
                         }
                         ShortcutsAdded++;
                     }
-                    u.Node.SearchTarget = false;
+                    currentNode.SearchTarget = false;
                     numberOfTargets--;
                 }
-                RelaxEdges(u, dijkstraPriorityQueue);
+                RelaxEdges(currentNode, distance, dijkstraPriorityQueue);
             }
             return ShortcutsAdded;
         }
 
-        private void RelaxEdges(CurrentNode parent, SimplePriorityQueue<CurrentNode, float> dijkstraPriorityQueue)
+        private void RelaxEdges(ProcessNode currentNode, float distance, PriorityQueue<ProcessNode, float> dijkstraPriorityQueue)
         {
-            float parentDistance = parent.Distance;
-            int firstEdge = parent.Node.FirstIndex;
-            int lastEdge = parent.Node.LastIndex;
+            int firstEdge = currentNode.FirstIndex;
+            int lastEdge = currentNode.LastIndex;
 
             for (int i = firstEdge; i <= lastEdge; i++)
             {
-                ProcessNode targetNode = ProcessGraph.Nodes[ProcessGraph.Edges[i].Target];
-                if (targetNode.Contracted)
+                Edge edge = ProcessGraph.Edges[i];
+                // check if edge is in the right direction
+                if (!edge.Forward)
                 {
                     continue;
                 }
-
-                // check if wrong direction
-                if (!ProcessGraph.Edges[i].Forward)
+                ProcessNode targetNode = ProcessGraph.Nodes[edge.Target];
+                // check if target node is not already contracted
+                if (targetNode.Contracted )
                 {
                     continue;
                 }
                 
                 // new distance from source of search to target of edge
-                float newDistance = parentDistance + ProcessGraph.Edges[i].Weight;
-                CurrentNode target = new CurrentNode(targetNode, newDistance);
-                // if new target already in queue remove to update its cost
-                if (dijkstraPriorityQueue.Contains(target))
-                {
-                    float oldDistance = dijkstraPriorityQueue.GetPriority(target);
-                    if (oldDistance > newDistance)
-                    {
-                        dijkstraPriorityQueue.Remove(target);
-                        dijkstraPriorityQueue.Enqueue(target, newDistance);
-                    }
-                } 
-                else
-                {
-                    // enqueue new target
-                    dijkstraPriorityQueue.Enqueue(target, newDistance);
-                }
+                float newDistance = distance + edge.Weight;
+                // enqueue new target
+                dijkstraPriorityQueue.Enqueue(targetNode, newDistance);
             }
         }
 
@@ -285,13 +275,10 @@ namespace ContractionHierarchies
                 return 0;
             }
             // save temp nodes for reuse of the graph
-            SearchNode[] temp = new SearchNode[SearchGraph.Nodes.Length];
-            Array.Copy(SearchGraph.Nodes, temp, SearchGraph.Nodes.Length);
-
             float result = BiDirDijkstra(source, target);
 
             // set clean nodes back
-            SearchGraph.Nodes = temp;
+            Array.Copy(SearchGraph.NodesBackup, SearchGraph.Nodes, SearchGraph.Nodes.Length);
             return result;
         }
 
