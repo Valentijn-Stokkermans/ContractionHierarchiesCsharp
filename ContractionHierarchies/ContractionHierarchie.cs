@@ -15,32 +15,35 @@ namespace ContractionHierarchies
     {
         SearchGraph SearchGraph { get; set; }
         ProcessGraph ProcessGraph { get; set; }
-        FastPriorityQueue<ProcessNode> PriorityQueue { get; set; }
-        int edgeGroupSize { get; set; } = 6 ;
+        PriorityQueue<ProcessNode, int> PriorityQueue { get; set; }
+        int EdgeGroupSize { get; set; } = 6 ;
 
-        int totalShortCutsAdded = 0;
+        int TotalShortCutsAdded = 0;
 
         public ContractionHierarchie(string inputFile, int edgeGroupSize)
         {
-            this.edgeGroupSize = edgeGroupSize;
+            this.EdgeGroupSize = edgeGroupSize;
             ProcessGraph = new ProcessGraph(inputFile, edgeGroupSize);
-            PriorityQueue = new FastPriorityQueue<ProcessNode>(ProcessGraph.NodesSize);
+            PriorityQueue = new(ProcessGraph.NodesSize);
         }
 
         public ContractionHierarchie(string inputFile)
         {
-            ProcessGraph = new ProcessGraph(inputFile, edgeGroupSize);
-            PriorityQueue = new FastPriorityQueue<ProcessNode>(ProcessGraph.NodesSize);
+            ProcessGraph = new ProcessGraph(inputFile, EdgeGroupSize);
+            PriorityQueue = new(ProcessGraph.NodesSize);
         }
 
         public void PreProcess(int chooseImportance, int chooseContraction, int maxSettledNodes)
         {
+            
             // calculate importance for each node and fill priority queue
             for (int i = 0; i < ProcessGraph.NodesSize; i++)
             {
                 int importance = CalculateImportance(chooseImportance, ProcessGraph.Nodes[i]);
                 PriorityQueue.Enqueue(ProcessGraph.Nodes[i], importance);
             }
+            
+            
             int nodeLevel = 0;
             // take lowest priority and contract
             while (PriorityQueue.Count != 0) // recursief maken
@@ -50,20 +53,16 @@ namespace ContractionHierarchies
                 node.NodeLevel = nodeLevel;
                 nodeLevel++;
             }
+            Console.WriteLine("Total number of shortcuts added: " + TotalShortCutsAdded);
         }
 
         private int CalculateImportance(int chooseType, ProcessNode node)
         {
-            switch (chooseType)
+            return chooseType switch
             {
-                default:
-                case 0:
-                    // standard simulation importance
-                    return SimulationImportance(node);
-                case 1:
-                    // simple formula
-                    return SimpleImportance(node);
-            }
+                1 => SimpleImportance(node),// simple formula
+                _ => SimulationImportance(node),// standard simulation importance
+            };
         }
 
         private int SimulationImportance(ProcessNode node) { return 0; }
@@ -140,14 +139,10 @@ namespace ContractionHierarchies
                     float costFromSource = ProcessGraph.Edges[i].Weight; // add cost from source to max cost to targets
                     float maxCost = costFromSource + maxCostToTarget; // add cost from source to max cost to targets
 
-                    switch (chooseType)
+                    TotalShortCutsAdded += chooseType switch
                     {
-                        default:
-                        case 0:
-                            // use dijkstra
-                            totalShortCutsAdded += Dijkstra(ProcessGraph.Nodes[sourceNode], maxCost, numberOfTargets, maxSettledNodes, node.ID, costFromSource, simulate);
-                            break;
-                    }
+                        _ => Dijkstra(ProcessGraph.Nodes[sourceNode], maxCost, numberOfTargets, maxSettledNodes, node.ID, costFromSource, simulate),// use dijkstra
+                    };
                 }
             }
             // set node back to not Contracted if it is a simulation

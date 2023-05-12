@@ -4,7 +4,6 @@ class Program
 {
     public static void Main()
     {
-        Test newTest = new Test();
-        newTest.testCorrectness(10);
+        CSVQuersGenerator.Create();
     }
 }

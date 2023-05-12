@@ -11,11 +11,11 @@ namespace Testing
 {
     internal class Test
     {
-        public void testCorrectness(int size)
+        public void TestCorrectness(int size)
         {
             GraphGen newGraph = new GraphGen(size);
             newGraph.genMatrix();
-            var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\example_graph.csv";
+            var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\small_directed_graph.csv";
             List<string[]> fields = new List<string[]> { };
             using (TextFieldParser parser = new TextFieldParser(file))
             {
@@ -109,6 +109,48 @@ namespace Testing
             Console.WriteLine($"One Query Time: Dijkstra: {(double)elapsedMsDijkstra / vertices.Count}, CH: {(double)elapsedMsCH / (vertices.Count * vertices.Count)}");
             Console.WriteLine("Number of wrong results: " + wrongRes);
             Console.WriteLine("Number of correct results: " + correctRes);
+        }
+
+        public void TestCorrectnessSmallDirectedGraph()
+        {
+            var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\small_directed_graph.csv";
+
+            var watchTotal = System.Diagnostics.Stopwatch.StartNew();
+            var watchPrepCH = System.Diagnostics.Stopwatch.StartNew();
+
+            //preprocessing stage.
+            var maxSettledNodes = 100;
+            var edgeGroupSize = 10;
+            var ch = new ContractionHierarchie(file, edgeGroupSize);
+            ch.PreProcess(1, 0, maxSettledNodes);
+            ch.CreateSearchGraph();
+
+            watchPrepCH.Stop();
+            long elapsedMSPrepCH = watchPrepCH.ElapsedMilliseconds;
+
+            int q = 0;
+            long elapsedMsDijkstra = 0;
+            long elapsedMsCH = 0;
+
+            for (int i = 0; i < 9; i++)
+            {
+                var watchDijkstra = System.Diagnostics.Stopwatch.StartNew();
+                watchDijkstra.Stop();
+                elapsedMsDijkstra += watchDijkstra.ElapsedMilliseconds;
+                var watchCH = System.Diagnostics.Stopwatch.StartNew();
+                for (int j = 0; j < 9; j++)
+                {
+                    //acutal distance computation stage.
+                    float res = ch.Query(i, j);
+                    Console.WriteLine($"from: {i} to: {j}, CH: {res}");
+                }
+                watchCH.Stop();
+                elapsedMsCH += watchCH.ElapsedMilliseconds;
+            }
+            watchTotal.Stop();
+            Console.WriteLine($"Total Time: Dijkstra: {elapsedMsDijkstra}, PrepCH: {elapsedMSPrepCH}, CH: {elapsedMsCH}, total: {watchTotal.ElapsedMilliseconds}");
+            //Console.WriteLine("Number of wrong results: " + wrongRes);
+            //Console.WriteLine("Number of correct results: " + correctRes);
         }
 
         public void testExample()
