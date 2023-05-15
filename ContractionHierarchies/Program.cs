@@ -16,12 +16,13 @@ class Program
         var maxSettledNodes = 100;
         var edgeGroupSize = 10;
         int importanceType = 0;
-        int contractionType = 1;
+        int contractionType = 0;
         int contractionSearchType = 0;
         bool recalculateImportance = false;
 
-        //Testing.TestPerformance(maxSettledNodes, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance);
-        Testing.TestCorrectness();
+        Testing.TestPerformance(maxSettledNodes, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance);
+        //Testing.TestCorrectness();
+        Testing.CreateCSVQueries();
     }
 
 } 

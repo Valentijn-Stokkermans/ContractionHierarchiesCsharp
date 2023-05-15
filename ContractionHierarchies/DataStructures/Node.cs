@@ -29,7 +29,7 @@ namespace ContractionHierarchies.DataStructures
         public bool SettledForward { get; set; } = false;
         public bool SettledBackward { get; set; } = false;
         // distance in dijkstra from source
-        public float Distance { get; set; } = 0;
+        public float Distance { get; set; } = float.MaxValue;
     }
 
     public class ProcessNode

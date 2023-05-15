@@ -12,7 +12,7 @@ namespace ContractionHierarchies
         public static void TestPerformance(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance)
         {
             string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\netherlands.csv";
-            string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\CSVQuery.csv";
+            string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\netherlandsQuery.csv";
 
             // preprocess
             var ch = new ContractionHierarchie(graphFile, edgeGroupSize);
@@ -21,7 +21,7 @@ namespace ContractionHierarchies
             ch.CreateSearchGraph();
             watchPreprocessing.Stop();
             long elapsedMSPreprocessing = watchPreprocessing.ElapsedMilliseconds;
-
+            Console.WriteLine("Preprocessing time: " + elapsedMSPreprocessing);
             // read query file
             List<string[]> fields = new() { };
             using (TextFieldParser parser = new(queryFile))
@@ -34,7 +34,6 @@ namespace ContractionHierarchies
                     fields.Add(parser.ReadFields());
                 }
             }
-            Console.WriteLine("Preprocessing time: " + elapsedMSPreprocessing);
 
             // run queries
             var watchQuery = System.Diagnostics.Stopwatch.StartNew();
@@ -52,10 +51,10 @@ namespace ContractionHierarchies
 
         public static void TestCorrectness()
         {
-            //var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\example_graph.csv";
-            var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\small_directed_graph.csv";
-            List<string[]> fields = new List<string[]> { };
-            using (TextFieldParser parser = new TextFieldParser(file))
+            var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\example_graph.csv";
+            //var file = "C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\small_directed_graph.csv";
+            List<string[]> fields = new() { };
+            using (TextFieldParser parser = new(file))
             {
                 parser.TextFieldType = FieldType.Delimited;
                 parser.SetDelimiters(",");
@@ -70,7 +69,7 @@ namespace ContractionHierarchies
             HashSet<int> nodes = new HashSet<int>();
 
             // count unique nodes
-            for (int i = 0; i < fields.Count(); i++)
+            for (int i = 0; i < fields.Count; i++)
             {
                 nodes.Add(int.Parse(fields[i][0]));
             }
@@ -114,12 +113,12 @@ namespace ContractionHierarchies
 
         public static void CreateCSVQueries()
         {
-            string filePath = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\CSVQuery.csv";
+            string filePath = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\netherlandsQuery.csv";
             int rowCount = 1000; // number of queries to be made
             int minValue = 0;
-            int maxValue = 234615; // number of nodes in roads.csv + 1
+            int maxValue = 3189645; // 234615 nodes in franceRoute500.csv (+ 1), 3189645 nodes in netherlands.csv
 
-            using (StreamWriter sw = new StreamWriter(filePath))
+            using (StreamWriter sw = new(filePath))
             {
                 for (int i = 0; i < rowCount; i++)
                 {
@@ -133,7 +132,7 @@ namespace ContractionHierarchies
 
         public static int GenerateRandomNumber(int minValue, int maxValue)
         {
-            Random rnd = new Random();
+            Random rnd = new();
             return rnd.Next(minValue, maxValue + 1);
         }
     }

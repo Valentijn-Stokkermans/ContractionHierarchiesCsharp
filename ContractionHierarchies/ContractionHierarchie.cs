@@ -53,7 +53,6 @@ namespace ContractionHierarchies
         /// </summary>
         public void PreProcess(int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxSettledNodes)
         {
-            Console.WriteLine("Number of nodes: " + ProcessGraph.NodesSize);
             // calculate importance for each node and fill priority queue
             for (int i = 0; i < ProcessGraph.NodesSize; i++)
             {
@@ -429,15 +428,16 @@ namespace ContractionHierarchies
 
         private float BiDirDijkstra(int source, int target)
         {
-            SearchNodeEqualityComparer currentNodeEqualityComparer = new();
-            SimplePriorityQueue<SearchNode, float> forwardQueue = new(currentNodeEqualityComparer);
-            SimplePriorityQueue<SearchNode, float> backwardQueue = new(currentNodeEqualityComparer);
+            PriorityQueue<SearchNode, float> forwardQueue = new();
+            PriorityQueue<SearchNode, float> backwardQueue = new();
 
             SearchNode sourceNode = SearchGraph.Nodes[source];
             SearchNode targetNode = SearchGraph.Nodes[target];
 
             sourceNode.SettledForward = true;
+            sourceNode.Distance = 0;
             targetNode.SettledBackward = true;
+            targetNode.Distance = 0;
 
             SearchGraph.Nodes[source] = sourceNode;
             SearchGraph.Nodes[target] = targetNode;
@@ -446,7 +446,7 @@ namespace ContractionHierarchies
             backwardQueue.Enqueue(targetNode, 0);
 
             SearchNode u;
-            List<Tuple<SearchNode, float>> settledBothDir = new List<Tuple<SearchNode, float>>();
+            List<Tuple<SearchNode, float>> settledBothDir = new();
 
             while (forwardQueue.Count != 0 || backwardQueue.Count != 0)
             {
@@ -461,7 +461,7 @@ namespace ContractionHierarchies
                     u = forwardQueue.Dequeue();
                     BiDirRelaxEdges(u, true, forwardQueue, settledBothDir);
                 }
-                else if (forwardQueue.First().Distance <= backwardQueue.First().Distance)
+                else if (forwardQueue.Peek().Distance <= backwardQueue.Peek().Distance)
                 {
                     u = forwardQueue.Dequeue();
                     BiDirRelaxEdges(u, true, forwardQueue, settledBothDir);
@@ -471,6 +471,7 @@ namespace ContractionHierarchies
                     u = backwardQueue.Dequeue();
                     BiDirRelaxEdges(u, false, backwardQueue, settledBothDir);
                 }
+                
             }
             if (settledBothDir.Count == 0)
             {
@@ -479,7 +480,7 @@ namespace ContractionHierarchies
             return settledBothDir.Min(t => t.Item2);
         }
 
-        private void BiDirRelaxEdges(SearchNode parent, bool forward, SimplePriorityQueue<SearchNode, float> PriorityQueue, List<Tuple<SearchNode, float>> settledBothDir)
+        private void BiDirRelaxEdges(SearchNode parent, bool forward, PriorityQueue<SearchNode, float> PriorityQueue, List<Tuple<SearchNode, float>> settledBothDir)
         {
             float parentDistance = parent.Distance;
             int firstEdge = parent.FirstIndex;
@@ -487,8 +488,9 @@ namespace ContractionHierarchies
 
             for (int i = firstEdge; i <= lastEdge; i++)
             {
-                SearchNode targetNode = SearchGraph.Nodes[SearchGraph.Edges[i].Target];
-                if (!(SearchGraph.Edges[i].Forward == forward || SearchGraph.Edges[i].Backward != forward))
+                Edge edge = SearchGraph.Edges[i];
+                SearchNode targetNode = SearchGraph.Nodes[edge.Target];
+                if (edge.Forward != forward && edge.Backward == forward)
                 {
                     continue;
                 }
@@ -504,33 +506,20 @@ namespace ContractionHierarchies
 
                 if (targetNode.SettledForward && targetNode.SettledBackward)
                 {
-                    float totalDistance = parentDistance + SearchGraph.Edges[i].Weight + targetNode.Distance; // total distance from source to target found
+                    float totalDistance = parentDistance + edge.Weight + targetNode.Distance; // total distance from source to target found
                     settledBothDir.Add(new Tuple<SearchNode, float>(targetNode, totalDistance));
                     continue;
                 }
 
                 // new distance from source of search to target of edge
-                float newDistance = parentDistance + SearchGraph.Edges[i].Weight;
+                float newDistance = parentDistance + edge.Weight;
                 
-                // if new target already in queue remove to update its cost
-                if (PriorityQueue.Contains(targetNode))
-                {
-                    float oldDistance = PriorityQueue.GetPriority(targetNode); 
-                    if (oldDistance > newDistance)
-                    {
-                        targetNode.Distance = newDistance;
-                        PriorityQueue.Remove(targetNode);
-                        PriorityQueue.Enqueue(targetNode, newDistance);
-                    }
-                    SearchGraph.Nodes[SearchGraph.Edges[i].Target] = targetNode;
-                }
-                else
+                if (newDistance < targetNode.Distance)
                 {
                     targetNode.Distance = newDistance;
-                    SearchGraph.Nodes[SearchGraph.Edges[i].Target] = targetNode;
-                    // enqueue new target
                     PriorityQueue.Enqueue(targetNode, newDistance);
                 }
+                SearchGraph.Nodes[edge.Target] = targetNode;
             }
         }
 

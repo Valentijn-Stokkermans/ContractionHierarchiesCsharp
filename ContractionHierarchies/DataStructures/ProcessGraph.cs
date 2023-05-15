@@ -19,7 +19,6 @@ namespace ContractionHierarchies.DataStructures
         {
             EdgeGroupSize = edgeGroupSize;
             MakeGraphFromCSV(inputCSV);
-            PrintProcessGraph();
         }
 
         public void MakeGraphFromCSV(string inputCSV)
@@ -104,7 +103,7 @@ namespace ContractionHierarchies.DataStructures
             }
 
             // check if there is still room
-            if (Edges[node.LastIndex + 1].Target == -1) 
+            if (node.LastIndex + 1 < Edges.Count && Edges[node.LastIndex + 1].Target == -1) 
             {
                 // check if init phase
                 if (init)
@@ -128,7 +127,7 @@ namespace ContractionHierarchies.DataStructures
             // if no free spot is found transfer all edges to a new area at the end of the list, old area is free space
             int newStart = Edges.Count;
             int numberOfEdges = 1 + node.LastIndex - node.FirstIndex;
-            Console.WriteLine("transfer: " + numberOfEdges + " edges");
+
             // transfer edges
             Edges.AddRange(Edges.GetRange(node.FirstIndex, numberOfEdges));
             // add new edge
