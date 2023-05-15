@@ -32,7 +32,7 @@ namespace ContractionHierarchies.DataStructures
         public float Distance { get; set; } = 0;
     }
 
-    public class ProcessNode : FastPriorityQueueNode
+    public class ProcessNode
     {
         public ProcessNode(int nodeIndex, int firstIndex)
         {
@@ -62,31 +62,6 @@ namespace ContractionHierarchies.DataStructures
         // node level, order of contraction
         public int NodeLevel { get; set; } = 0;
         // node id, index in nodes array
-    }
-
-    public class CurrentNode
-    {
-        public CurrentNode(ProcessNode node, float edgeWeight) 
-        { 
-            Node = node;
-            Distance = edgeWeight;
-        }
-
-        public ProcessNode Node { get; set; }
-        public float Distance { get; set; }
-    }
-
-    class CurrentNodeEqualityComparer : IEqualityComparer<CurrentNode> 
-    {
-        public bool Equals(CurrentNode x, CurrentNode y) 
-        { 
-            return x.Node.ID == y.Node.ID;
-        }
-
-        public int GetHashCode(CurrentNode obj) 
-        { 
-            return obj.Node.GetHashCode();
-        }
     }
 
     class SearchNodeEqualityComparer : IEqualityComparer<SearchNode>

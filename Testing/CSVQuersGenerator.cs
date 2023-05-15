@@ -8,7 +8,7 @@ namespace Testing
 {
     public static class CSVQuersGenerator
     {
-        public static void Create()
+        public static void CreateCSVQueries()
         {
             string filePath = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\CSVQuery.csv";
             int rowCount = 1000; // number of queries to be made

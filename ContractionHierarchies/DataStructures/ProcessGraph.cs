@@ -19,12 +19,13 @@ namespace ContractionHierarchies.DataStructures
         {
             EdgeGroupSize = edgeGroupSize;
             MakeGraphFromCSV(inputCSV);
+            PrintProcessGraph();
         }
 
         public void MakeGraphFromCSV(string inputCSV)
         {
             // expects a csv file with source_id, target_id, weight
-            // with node id's starting at 0
+            // with id's starting at 0
 
             // read all lines and store temporarily in fields
             List<string[]> fields = new List<string[]> { };
@@ -44,16 +45,21 @@ namespace ContractionHierarchies.DataStructures
             int largestNode = 0;
             for (int i = 0; i < fields.Count(); i++)
             {
-                int node = int.Parse(fields[i][0]);
-                if (node > largestNode)
+                int source = int.Parse(fields[i][0]);
+                if (source > largestNode)
                 {
-                    largestNode = node;
+                    largestNode = source;
+                }
+                int target = int.Parse(fields[i][1]);
+                if (target > largestNode)
+                {
+                    largestNode = target;
                 }
             }
 
             // initialize the nodes and edges lists.
             Nodes = new ProcessNode[largestNode+1];
-            Edges = new List<Edge>(largestNode * EdgeGroupSize); // normally max 4 edges per node for both directions, 2 spaces left for shortcuts
+            Edges = new List<Edge>(largestNode * EdgeGroupSize);
             for (int i = 0; i <= largestNode; i++)
             {
                 Nodes[i] = new ProcessNode(i, i*EdgeGroupSize);
@@ -64,18 +70,18 @@ namespace ContractionHierarchies.DataStructures
             }
 
             // fill nodes and edges lists
-            for (int i = 0; i < fields.Count(); i++)
+            for (int i = 0; i < fields.Count; i++)
             {
                 int source = int.Parse(fields[i][0]);
                 int target = int.Parse(fields[i][1]);
                 float weight = float.Parse(fields[i][2]);
-                
-                AddEdgeToProcessNode(Nodes[source], weight, target, true, true); // add forward edge
-                AddEdgeToProcessNode(Nodes[target], weight, source, false, true); // add backward edge
+
+                AddEdgeToProcessNode(Nodes[source], weight, target, true, false, true); // add forward edge
+                AddEdgeToProcessNode(Nodes[target], weight, source, false, true, true); // add backward edge
             }
         }
 
-        public void AddEdgeToProcessNode(ProcessNode node, float weight, int target, bool forward, bool init) 
+        public void AddEdgeToProcessNode(ProcessNode node, float weight, int target, bool forward, bool backward, bool init) 
         {
             // check if edge is already present in other direction
             for (int i = node.FirstIndex; i <= node.LastIndex; i++)
@@ -88,7 +94,7 @@ namespace ContractionHierarchies.DataStructures
                     { 
                         edge.Forward = true;
                     }
-                    else
+                    if (backward)
                     {
                         edge.Backward = true;
                     }
@@ -106,14 +112,14 @@ namespace ContractionHierarchies.DataStructures
                     // check if not over the max edgeGroupSize initial spots
                     if (node.LastIndex < node.FirstIndex + EdgeGroupSize - 1)
                     {
-                        Edges[node.LastIndex + 1] = new Edge(weight, target, forward, !forward);
+                        Edges[node.LastIndex + 1] = new Edge(weight, target, forward, backward);
                         node.LastIndex++;
                         return;
                     }
                 } 
                 else 
                 {
-                    Edges[node.LastIndex + 1] = new Edge(weight, target, forward, !forward);
+                    Edges[node.LastIndex + 1] = new Edge(weight, target, forward, backward);
                     node.LastIndex++;
                     return;
                 }
@@ -122,10 +128,11 @@ namespace ContractionHierarchies.DataStructures
             // if no free spot is found transfer all edges to a new area at the end of the list, old area is free space
             int newStart = Edges.Count;
             int numberOfEdges = 1 + node.LastIndex - node.FirstIndex;
+            Console.WriteLine("transfer: " + numberOfEdges + " edges");
             // transfer edges
             Edges.AddRange(Edges.GetRange(node.FirstIndex, numberOfEdges));
             // add new edge
-            Edges.Add(new Edge(weight, target, forward, !forward));
+            Edges.Add(new Edge(weight, target, forward, backward));
             // create new extra space, dubble the original size of the edge group
             for (int i = 0; i <= numberOfEdges; i++)
             {
@@ -138,7 +145,7 @@ namespace ContractionHierarchies.DataStructures
             }
             // update node indexes
             node.FirstIndex = newStart;
-            node.LastIndex = newStart + numberOfEdges - 1;
+            node.LastIndex = newStart + numberOfEdges;
             return;
         }
 
