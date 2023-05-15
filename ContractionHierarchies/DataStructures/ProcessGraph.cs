@@ -144,7 +144,7 @@ namespace ContractionHierarchies.DataStructures
             }
             // update node indexes
             node.FirstIndex = newStart;
-            node.LastIndex = newStart + numberOfEdges;
+            node.LastIndex = newStart + numberOfEdges - 1;
             return;
         }
 

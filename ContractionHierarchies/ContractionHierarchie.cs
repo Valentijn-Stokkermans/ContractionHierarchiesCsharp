@@ -34,7 +34,6 @@ namespace ContractionHierarchies
         }
 
         /// <summary>
-        /// This method changes the point's location by the given x- and y-offsets.
         /// <para> 
         /// <paramref name="importanceType"/> 
         /// 0: simple heuristic
@@ -51,32 +50,62 @@ namespace ContractionHierarchies
         /// number of nodes that should be settled before placing a shortcut
         /// </para>
         /// </summary>
-        public void PreProcess(int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxSettledNodes)
+        public void PreProcess(int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxSettledNodes, int maxWrongImportance)
         {
             // calculate importance for each node and fill priority queue
-            for (int i = 0; i < ProcessGraph.NodesSize; i++)
-            {
-                int importance = CalculateImportance(importanceType, ProcessGraph.Nodes[i]);
-                PriorityQueue.Enqueue(ProcessGraph.Nodes[i], importance);
-            }
-            
             int nodeLevel = 0;
+            CalculateImportanceForAll(nodeLevel, importanceType, contractionSearchType, maxSettledNodes);
+
             // take lowest priority and contract
             while (PriorityQueue.TryDequeue(out ProcessNode node, out int priority)) // recursief maken
             {
-                int importance = CalculateImportance(importanceType, node);
-                if (priority <= importance)
+                int wrongImportance = 0;
+                int importance = CalculateImportance(importanceType, node, contractionSearchType, maxSettledNodes);
+                if (recalculateImportance)
                 {
+                    if (priority <= importance)
+                    {
+                        int oldShortcutsAdded = TotalShortCutsAdded;
+                        ContractNode(contractionType, contractionSearchType, node, maxSettledNodes, false);
+                        Console.WriteLine("contraction node: " + nodeLevel + " / " + ProcessGraph.NodesSize + " shortcuts added: " + (TotalShortCutsAdded - oldShortcutsAdded) + " total shortcuts: " + TotalShortCutsAdded);
+                        node.NodeLevel = nodeLevel;
+                        nodeLevel++;
+                    }
+                    else
+                    {
+                        wrongImportance++;
+                        if (wrongImportance > maxWrongImportance)
+                        {
+                            CalculateImportanceForAll(nodeLevel, importanceType, contractionSearchType, maxSettledNodes);
+                            continue;
+                        }
+                        PriorityQueue.Enqueue(node, importance);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("contraction node: " + nodeLevel + " / " + ProcessGraph.NodesSize + " total shortcuts: " + TotalShortCutsAdded);
                     ContractNode(contractionType, contractionSearchType, node, maxSettledNodes, false);
                     node.NodeLevel = nodeLevel;
                     nodeLevel++;
                 }
-                else
-                {
-                    PriorityQueue.Enqueue(node, importance);
-                }
             }
             Console.WriteLine("Total number of shortcuts added: " + TotalShortCutsAdded);
+        }
+
+        private void CalculateImportanceForAll(int nodeLevel, int importanceType, int contractionSearchType, int maxSettledNodes)
+        {
+            PriorityQueue = new(ProcessGraph.NodesSize - nodeLevel);
+            for (int i = 0; i < ProcessGraph.NodesSize; i++)
+            {
+                ProcessNode node = ProcessGraph.Nodes[i];
+                if (node.Contracted)
+                {
+                    continue;
+                }
+                int importance = CalculateImportance(importanceType, ProcessGraph.Nodes[i], contractionSearchType, maxSettledNodes);
+                PriorityQueue.Enqueue(ProcessGraph.Nodes[i], importance);
+            }
         }
 
         private void ContractNode(int contractionType, int contractionSearchType, ProcessNode node, int maxSettledNodes, bool simulate)
@@ -88,16 +117,19 @@ namespace ContractionHierarchies
             };
         }
 
-        private int CalculateImportance(int importanceType, ProcessNode node)
+        private int CalculateImportance(int importanceType, ProcessNode node, int contractionSearchType, int maxSettledNodes)
         {
             return importanceType switch
             {
-                1 => SimulationImportance(node),// standard simulation importance
+                1 => SimulationImportance(node, contractionSearchType, maxSettledNodes),// standard simulation importance
                 _ => SimpleImportance(node),// simple formula
             };
         }
 
-        private int SimulationImportance(ProcessNode node) { return 0; }
+        private int SimulationImportance(ProcessNode node, int contractionSearchType, int maxSettledNodes) 
+        { 
+            return ContractNodeNormal(contractionSearchType, node, maxSettledNodes, true); 
+        }
         private int SimpleImportance(ProcessNode node) 
         {
             int forward = 0;
@@ -207,11 +239,12 @@ namespace ContractionHierarchies
             }
         }
 
-        private void ContractNodeNormal(int contractionSearchType, ProcessNode node, int maxSettledNodes, bool simulate)
+        private int ContractNodeNormal(int contractionSearchType, ProcessNode node, int maxSettledNodes, bool simulate)
         {
             int firstEdge = node.FirstIndex;
             int lastEdge = node.LastIndex;
             float maxCostToTarget = 0;
+            int addedShortCuts = 0;
 
             // set current node as Contracted
             node.Contracted = true;
@@ -263,7 +296,7 @@ namespace ContractionHierarchies
                     float costFromSource = ProcessGraph.Edges[i].Weight; // add cost from source to max cost to targets
                     float maxCost = costFromSource + maxCostToTarget; // add cost from source to max cost to targets
 
-                    TotalShortCutsAdded += contractionSearchType switch
+                    addedShortCuts = contractionSearchType switch
                     {
                         _ => Dijkstra(ProcessGraph.Nodes[sourceNode], maxCost, numberOfTargets, new List<int>(), maxSettledNodes, node.ID, costFromSource, simulate),// use dijkstra
                     };
@@ -274,6 +307,9 @@ namespace ContractionHierarchies
             {
                 node.Contracted = false;
             }
+
+            TotalShortCutsAdded += addedShortCuts;
+            return addedShortCuts;
         }
 
         private int Dijkstra(ProcessNode source, double maxCost, int numberOfTargets, List<int> BiDirTargets, int maxSettledNodes, int middleNodeID, float costToMiddleNode, bool simulate) 
