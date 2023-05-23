@@ -76,7 +76,9 @@ namespace ContractionHierarchies.DataStructures
                 float weight = float.Parse(fields[i][2]);
 
                 AddEdgeToProcessNode(Nodes[source], weight, target, true, false, true); // add forward edge
+                Nodes[source].OriginalEdgesCount++;
                 AddEdgeToProcessNode(Nodes[target], weight, source, false, true, true); // add backward edge
+                Nodes[target].OriginalEdgesCount++;
             }
         }
 
@@ -144,7 +146,7 @@ namespace ContractionHierarchies.DataStructures
             }
             // update node indexes
             node.FirstIndex = newStart;
-            node.LastIndex = newStart + numberOfEdges - 1;
+            node.LastIndex = newStart + numberOfEdges;
             return;
         }
 

@@ -62,6 +62,8 @@ namespace ContractionHierarchies.DataStructures
         // node level, order of contraction
         public int NodeLevel { get; set; } = 0;
         // node id, index in nodes array
+        public int ContractedNeighbors { get; set; } = 0;
+        public int OriginalEdgesCount { get; set; } = 0;
     }
 
     class SearchNodeEqualityComparer : IEqualityComparer<SearchNode>

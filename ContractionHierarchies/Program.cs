@@ -13,17 +13,17 @@ class Program
 {
      static void Main(string[] args)
      {
-        var maxSettledNodes = 500;
-        var edgeGroupSize = 2;
-        int importanceType = 1;
+        var maxSettledNodes = 20;
+        var edgeGroupSize = 10;
+        int importanceType = 0;
         int contractionType = 1;
         int contractionSearchType = 0;
         bool recalculateImportance = true;
-        int maxWrongImportance = 200;
+        int maxWrongImportance = 5;
 
-        //Testing.TestPerformance(maxSettledNodes, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance);
+        Testing.TestPerformancePreProcess(maxSettledNodes, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxWrongImportance);
         //Testing.TestCorrectnessBig(maxSettledNodes, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxWrongImportance);
         //Testing.CreateCSVQueries();
-        Testing.TestCorrectness();
+        //Testing.TestCorrectness();
     }
 } 

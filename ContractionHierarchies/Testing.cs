@@ -9,15 +9,47 @@ namespace ContractionHierarchies
 {
     public static class Testing
     {
-        public static void TestPerformance(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
+        /// <summary>
+        /// <para> 
+        /// <paramref name="importanceType"/> 
+        /// 0: simple heuristic
+        /// 1: simulation
+        /// <paramref name="contractionType"/>
+        /// 0: BiDir speedup contraction
+        /// 1: normal contraction
+        /// <paramref name="contractionSearchType"/>
+        /// 0: dijkstra
+        /// <paramref name="recalculateImportance"/>
+        /// true: check if the importance is still the smallest
+        /// false: do not recalculate the importance
+        /// <paramref name="maxSettledNodes"/>
+        /// number of nodes that should be settled before placing a shortcut
+        /// </para>
+        /// </summary>
+        public static void TestPerformancePreProcess(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
         {
-            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\netherlands.csv";
-            string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\netherlandsQuery.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland.csv";
+            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
-            ch.PreProcess(importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxWrongImportance);
+            ch.PreProcess();
+            ch.CreateSearchGraph();
+            watchPreprocessing.Stop();
+            long elapsedMSPreprocessing = watchPreprocessing.ElapsedMilliseconds;
+            Console.WriteLine("Preprocessing time: " + elapsedMSPreprocessing);
+        }
+
+        public static void TestPerformanceQuery(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
+        {
+            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
+            string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\franceRoute500Query.csv";
+
+            // preprocess
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
+            var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
+            ch.PreProcess();
             ch.CreateSearchGraph();
             watchPreprocessing.Stop();
             long elapsedMSPreprocessing = watchPreprocessing.ElapsedMilliseconds;
@@ -72,9 +104,9 @@ namespace ContractionHierarchies
             string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\franceRoute500QuerySmall.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
-            ch.PreProcess(importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxWrongImportance);
+            ch.PreProcess();
             ch.CreateSearchGraph();
             watchPreprocessing.Stop();
             long elapsedMSPreprocessing = watchPreprocessing.ElapsedMilliseconds;
@@ -148,8 +180,8 @@ namespace ContractionHierarchies
             int contractionSearchType = 0;
             bool recalculateImportance = true;
             int maxWrongImportance = 10;
-            var ch = new ContractionHierarchie(file, edgeGroupSize);
-            ch.PreProcess(importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxWrongImportance);
+            var ch = new ContractionHierarchie(file, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
+            ch.PreProcess();
             ch.CreateSearchGraph();
 
             int wrongRes = 0;
@@ -180,10 +212,10 @@ namespace ContractionHierarchies
 
         public static void CreateCSVQueries()
         {
-            string filePath = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\franceRoute500QuerySmall.csv";
-            int rowCount = 10; // number of queries to be made
+            string filePath = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\franceRoute500Query.csv";
+            int rowCount = 10000; // number of queries to be made
             int minValue = 0;
-            int maxValue = 234614; // 234615 nodes in franceRoute500.csv (+ 1), 3189645 nodes in netherlands.csv
+            int maxValue = 234614; // 234614 nodes in franceRoute500.csv, 3189645 nodes in netherlands.csv
 
             using (StreamWriter sw = new(filePath))
             {

@@ -16,28 +16,64 @@ namespace ContractionHierarchies
         SearchGraph SearchGraph { get; set; }
         ProcessGraph ProcessGraph { get; set; }
         PriorityQueue<ProcessNode, int> PriorityQueue { get; set; }
-        int EdgeGroupSize { get; set; } = 6 ;
-
-        int TotalShortCutsAdded = 0;
+        int EdgeGroupSize { get; set; } = 8 ;
+        int TotalShortCutsAdded { get; set; } = 0;
+        int ImportanceType { get; set; } = 1;
+        int ContractionType { get; set; } = 1;
+        int ContractionSearchType { get; set; } = 0;
+        bool RecalculateImportance { get; set; } = true;
+        int MaxSettledNodesImportance { get; set; } = 1000;
+        int MaxSettledNodesContraction { get; set; } = 1000;
+        int MaxWrongImportance { get; set; } = 10;
+        int NewEdgesScaling { get; set; } = 100;
+        int ContNeighbScaling { get; set; } = 50;
+        int SearchSpaceScaling { get; set; } = 1;
+        int EdgeDiffScaling { get; set; } = 190;
+        int OriginalEdgesScaling { get; set; } = 600; // 70 normal
 
         public ContractionHierarchie(string inputFile, int edgeGroupSize)
         {
-            this.EdgeGroupSize = edgeGroupSize;
-            ProcessGraph = new ProcessGraph(inputFile, edgeGroupSize);
+            EdgeGroupSize = edgeGroupSize;
+            ProcessGraph = new(inputFile, edgeGroupSize);
             PriorityQueue = new(ProcessGraph.NodesSize);
         }
 
         public ContractionHierarchie(string inputFile)
         {
-            ProcessGraph = new ProcessGraph(inputFile, EdgeGroupSize);
+            ProcessGraph = new(inputFile, EdgeGroupSize);
             PriorityQueue = new(ProcessGraph.NodesSize);
+        }
+
+        
+        public ContractionHierarchie(string inputFile, int edgeGroupSize, int importanceType, int contractionType, 
+            int contractionSearchType, bool recalculateImportance, int maxSettledNodesImportance, int maxSettledNodesContraction, int maxWrongImportance,
+            int newEdgeScaling, int contNeighbScaling, int searchSpaceScaling, int edgeDiffScaling, int originalEdgesScaling)
+        {
+            EdgeGroupSize = edgeGroupSize;
+            ProcessGraph = new(inputFile, edgeGroupSize);
+            PriorityQueue = new(ProcessGraph.NodesSize);
+            ImportanceType = importanceType;
+            ContractionType = contractionType;
+            ContractionSearchType = contractionSearchType;
+            RecalculateImportance = recalculateImportance;
+            MaxSettledNodesImportance = maxSettledNodesImportance;
+            MaxSettledNodesContraction = maxSettledNodesContraction;
+            MaxWrongImportance = maxWrongImportance;
+            NewEdgesScaling = newEdgeScaling;
+            ContNeighbScaling = contNeighbScaling;
+            SearchSpaceScaling = searchSpaceScaling;
+            EdgeDiffScaling = edgeDiffScaling;
+            OriginalEdgesScaling = originalEdgesScaling;
         }
 
         /// <summary>
         /// <para> 
         /// <paramref name="importanceType"/> 
-        /// 0: simple heuristic
+        /// 0: All
         /// 1: simulation
+        /// 2: weight
+        /// 3: centrality
+        /// 4: NodeDegree
         /// <paramref name="contractionType"/>
         /// 0: BiDir speedup contraction
         /// 1: normal contraction
@@ -48,35 +84,58 @@ namespace ContractionHierarchies
         /// false: do not recalculate the importance
         /// <paramref name="maxSettledNodes"/>
         /// number of nodes that should be settled before placing a shortcut
+        /// <paramref name="maxWrongImportance"/>
+        /// number of nodes that need to fail before we recalculate all nodes
         /// </para>
         /// </summary>
-        public void PreProcess(int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxSettledNodes, int maxWrongImportance)
+        public ContractionHierarchie(string inputFile, int edgeGroupSize, int importanceType, int contractionType,
+            int contractionSearchType, bool recalculateImportance, int maxSettledNodesImportance, int maxSettledNodesContraction, int maxWrongImportance)
+        {
+            EdgeGroupSize = edgeGroupSize;
+            ProcessGraph = new(inputFile, edgeGroupSize);
+            PriorityQueue = new(ProcessGraph.NodesSize);
+            ImportanceType = importanceType;
+            ContractionType = contractionType;
+            ContractionSearchType = contractionSearchType;
+            RecalculateImportance = recalculateImportance;
+            MaxSettledNodesImportance = maxSettledNodesImportance;
+            MaxSettledNodesContraction = maxSettledNodesContraction;
+            MaxWrongImportance = maxWrongImportance;
+        }
+
+        public void PreProcess()
         {
             // calculate importance for each node and fill priority queue
             int nodeLevel = 0;
-            CalculateImportanceForAll(nodeLevel, importanceType, contractionSearchType, maxSettledNodes);
+            CalculateImportanceForAll(nodeLevel);
 
             // take lowest priority and contract
             while (PriorityQueue.TryDequeue(out ProcessNode node, out int priority)) // recursief maken
             {
-                int wrongImportance = 0;
-                int importance = CalculateImportance(importanceType, node, contractionSearchType, maxSettledNodes);
-                if (recalculateImportance)
+                if (node.Contracted)
                 {
+                    continue;
+                }
+
+                if (RecalculateImportance)
+                {
+                    int wrongImportance = 0;
+                    int importance = CalculateImportance(node);
                     if (priority <= importance)
                     {
                         int oldShortcutsAdded = TotalShortCutsAdded;
-                        ContractNode(contractionType, contractionSearchType, node, maxSettledNodes, false);
-                        Console.WriteLine("contraction node: " + nodeLevel + " / " + ProcessGraph.NodesSize + " shortcuts added: " + (TotalShortCutsAdded - oldShortcutsAdded) + " total shortcuts: " + TotalShortCutsAdded);
+                        ContractNode(node, false);
+                        UpdateNeighbors(node);
+                        Console.WriteLine("contraction node: " + nodeLevel + " / " + ProcessGraph.NodesSize + " shortcuts added: " + (TotalShortCutsAdded - oldShortcutsAdded) + " total shortcuts: " + TotalShortCutsAdded + " total edges: " + (node.LastIndex - node.FirstIndex));
                         node.NodeLevel = nodeLevel;
                         nodeLevel++;
                     }
                     else
                     {
                         wrongImportance++;
-                        if (wrongImportance > maxWrongImportance)
+                        if (wrongImportance > MaxWrongImportance)
                         {
-                            CalculateImportanceForAll(nodeLevel, importanceType, contractionSearchType, maxSettledNodes);
+                            CalculateImportanceForAll(nodeLevel);
                             continue;
                         }
                         PriorityQueue.Enqueue(node, importance);
@@ -85,7 +144,7 @@ namespace ContractionHierarchies
                 else
                 {
                     Console.WriteLine("contraction node: " + nodeLevel + " / " + ProcessGraph.NodesSize + " total shortcuts: " + TotalShortCutsAdded);
-                    ContractNode(contractionType, contractionSearchType, node, maxSettledNodes, false);
+                    ContractNode(node, false);
                     node.NodeLevel = nodeLevel;
                     nodeLevel++;
                 }
@@ -93,7 +152,19 @@ namespace ContractionHierarchies
             Console.WriteLine("Total number of shortcuts added: " + TotalShortCutsAdded);
         }
 
-        private void CalculateImportanceForAll(int nodeLevel, int importanceType, int contractionSearchType, int maxSettledNodes)
+        private void UpdateNeighbors(ProcessNode node)
+        {
+            for (int i = node.FirstIndex; i <= node.LastIndex; i++)
+            {
+                Edge edge = ProcessGraph.Edges[i];
+                ProcessNode neighborNode = ProcessGraph.Nodes[edge.Target];
+                neighborNode.ContractedNeighbors++;
+                int importance = CalculateImportance(neighborNode);
+                PriorityQueue.Enqueue(neighborNode, importance);
+            }
+        }
+
+        private void CalculateImportanceForAll(int nodeLevel)
         {
             PriorityQueue = new(ProcessGraph.NodesSize - nodeLevel);
             for (int i = 0; i < ProcessGraph.NodesSize; i++)
@@ -103,34 +174,62 @@ namespace ContractionHierarchies
                 {
                     continue;
                 }
-                int importance = CalculateImportance(importanceType, ProcessGraph.Nodes[i], contractionSearchType, maxSettledNodes);
-                PriorityQueue.Enqueue(ProcessGraph.Nodes[i], importance);
+                int importance = CalculateImportance(node);
+                PriorityQueue.Enqueue(node, importance);
             }
         }
 
-        private void ContractNode(int contractionType, int contractionSearchType, ProcessNode node, int maxSettledNodes, bool simulate)
+        private void ContractNode(ProcessNode node, bool simulate)
         {
-            switch (contractionType)
+            switch (ContractionType)
             {
-                case 0:  default: ContractNodeBiDir(contractionSearchType, node, maxSettledNodes, simulate); break;// standard simulation importance
-                case 1: ContractNodeNormal(contractionSearchType, node, maxSettledNodes, simulate); break;// simple formula
+                case 0:  default: ContractNodeBiDir(node, simulate, out _ ); break;// standard simulation importance
+                case 1: ContractNodeNormal( node, simulate, out _ ); break;// simple formula
             };
         }
 
-        private int CalculateImportance(int importanceType, ProcessNode node, int contractionSearchType, int maxSettledNodes)
+        private int CalculateImportance(ProcessNode node)
         {
-            return importanceType switch
+            return ImportanceType switch
             {
-                1 => SimulationImportance(node, contractionSearchType, maxSettledNodes),// standard simulation importance
-                _ => SimpleImportance(node),// simple formula
+                1 => SimulationImportance(node, out int searchSpace), // simulation with dijkstra
+                2 => WeightImportance(node),
+                3 => CentralityImportance(node),
+                4 => NodeDegreeImportance(node), // in edges times out edges
+                _ => CombinedImportance(node),
             };
         }
 
-        private int SimulationImportance(ProcessNode node, int contractionSearchType, int maxSettledNodes) 
+        private int CombinedImportance(ProcessNode node)
+        {
+            int newEdges = ContractNodeNormal(node, true, out int searchSpace);
+            int contractedNeighbors = node.ContractedNeighbors;
+            int edgeDiff = -2 * (node.LastIndex - node.FirstIndex + 1) + newEdges * 2;
+
+            int result = edgeDiff * EdgeDiffScaling;
+            result += newEdges * NewEdgesScaling;
+            result += contractedNeighbors * ContNeighbScaling;
+            result += searchSpace * SearchSpaceScaling;
+            result += node.OriginalEdgesCount * OriginalEdgesScaling;
+            // reach
+            return result;
+        }
+
+        private int CentralityImportance(ProcessNode node)
+        {
+            return 0;
+        }
+
+        private int WeightImportance(ProcessNode node)
+        {
+            return 0;
+        }
+
+        private int SimulationImportance(ProcessNode node, out int searchSpace) 
         { 
-            return ContractNodeNormal(contractionSearchType, node, maxSettledNodes, true); 
+            return ContractNodeNormal(node, true, out searchSpace); 
         }
-        private int SimpleImportance(ProcessNode node) 
+        private int NodeDegreeImportance(ProcessNode node) 
         {
             int forward = 0;
             int backward = 0;
@@ -150,11 +249,13 @@ namespace ContractionHierarchies
             return forward * backward;
         }
 
-        private void ContractNodeBiDir(int contractionSearchType, ProcessNode node, int maxSettledNodes, bool simulate)
+        private void ContractNodeBiDir(ProcessNode node, bool simulate, out int searchSpace)
         {
             int firstEdge = node.FirstIndex;
             int lastEdge = node.LastIndex;
             float maxCostToTarget = 0;
+            int addedShortCuts = 0;
+            searchSpace = 0;
             List<int> completedBiDirSources = new();
 
             // set current node as Contracted
@@ -226,9 +327,9 @@ namespace ContractionHierarchies
                     float maxCost = costFromSource + maxCostToTarget; // add cost from source to max cost to targets
                     completedBiDirSources.Add(sourceNodeID);
 
-                    TotalShortCutsAdded += contractionSearchType switch
+                    addedShortCuts = ContractionSearchType switch
                     {
-                        _ => Dijkstra(ProcessGraph.Nodes[sourceNodeID], maxCost, numberOfTargets, BiDirTargets, maxSettledNodes, node.ID, costFromSource, simulate),// use dijkstra
+                        _ => Dijkstra(ProcessGraph.Nodes[sourceNodeID], maxCost, numberOfTargets, BiDirTargets, node.ID, costFromSource, simulate, out searchSpace),// use dijkstra
                     };
                 }
             }
@@ -237,14 +338,19 @@ namespace ContractionHierarchies
             {
                 node.Contracted = false;
             }
+            else
+            {
+                TotalShortCutsAdded += addedShortCuts;
+            }
         }
 
-        private int ContractNodeNormal(int contractionSearchType, ProcessNode node, int maxSettledNodes, bool simulate)
+        private int ContractNodeNormal(ProcessNode node, bool simulate, out int searchSpace)
         {
             int firstEdge = node.FirstIndex;
             int lastEdge = node.LastIndex;
             float maxCostToTarget = 0;
             int addedShortCuts = 0;
+            searchSpace = 0;
 
             // set current node as Contracted
             node.Contracted = true;
@@ -296,9 +402,9 @@ namespace ContractionHierarchies
                     float costFromSource = ProcessGraph.Edges[i].Weight; // add cost from source to max cost to targets
                     float maxCost = costFromSource + maxCostToTarget; // add cost from source to max cost to targets
 
-                    addedShortCuts = contractionSearchType switch
+                    addedShortCuts = ContractionSearchType switch
                     {
-                        _ => Dijkstra(ProcessGraph.Nodes[sourceNode], maxCost, numberOfTargets, new List<int>(), maxSettledNodes, node.ID, costFromSource, simulate),// use dijkstra
+                        _ => Dijkstra(ProcessGraph.Nodes[sourceNode], maxCost, numberOfTargets, new List<int>(), node.ID, costFromSource, simulate, out searchSpace),// use dijkstra
                     };
                 }
             }
@@ -306,19 +412,30 @@ namespace ContractionHierarchies
             if (simulate)
             {
                 node.Contracted = false;
+            } 
+            else
+            {
+                TotalShortCutsAdded += addedShortCuts;
             }
 
-            TotalShortCutsAdded += addedShortCuts;
             return addedShortCuts;
         }
 
-        private int Dijkstra(ProcessNode source, double maxCost, int numberOfTargets, List<int> BiDirTargets, int maxSettledNodes, int middleNodeID, float costToMiddleNode, bool simulate) 
+        private int Dijkstra(ProcessNode source, double maxCost, int numberOfTargets, List<int> BiDirTargets, int middleNodeID, float costToMiddleNode, bool simulate, out int searchSpace) 
         {
             PriorityQueue<ProcessNode, float> dijkstraPriorityQueue = new();
 
             dijkstraPriorityQueue.Enqueue(source, 0);
 
             int ShortcutsAdded = 0;
+            int maxSettledNodes = MaxSettledNodesContraction;
+
+            if (simulate)
+            {
+                maxSettledNodes = MaxSettledNodesImportance;
+            }
+
+            searchSpace = 0;
 
             while (dijkstraPriorityQueue.TryDequeue(out ProcessNode currentNode, out float distance))
             {
@@ -326,8 +443,7 @@ namespace ContractionHierarchies
                 {
                     return ShortcutsAdded;
                 }
-
-                maxSettledNodes--;
+                searchSpace++;
 
                 // limit the search space, if targets have not been found add a shortcut to them or if the distance is larget than the maxcost
                 if (maxSettledNodes == 0 || distance > maxCost)
@@ -409,6 +525,7 @@ namespace ContractionHierarchies
                     currentNode.SearchTarget = false;
                     numberOfTargets--;
                 }
+                maxSettledNodes--;
                 RelaxEdges(currentNode, distance, dijkstraPriorityQueue);
             }
             return ShortcutsAdded;
