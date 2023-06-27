@@ -1,5 +1,4 @@
 ﻿using ContractionHierarchies.DataStructures;
-using Priority_Queue;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,14 +21,13 @@ namespace ContractionHierarchies
         int ContractionType { get; set; } = 1;
         int ContractionSearchType { get; set; } = 0;
         bool RecalculateImportance { get; set; } = true;
-        int MaxSettledNodesImportance { get; set; } = 1000;
+        int MaxSettledNodesImportance { get; set; } = 100;
         int MaxSettledNodesContraction { get; set; } = 1000;
         int MaxWrongImportance { get; set; } = 10;
-        int NewEdgesScaling { get; set; } = 100;
-        int ContNeighbScaling { get; set; } = 50;
+        int ContNeighbScaling { get; set; } = 120;
         int SearchSpaceScaling { get; set; } = 1;
         int EdgeDiffScaling { get; set; } = 190;
-        int OriginalEdgesScaling { get; set; } = 600; // 70 normal
+        int OriginalEdgesScaling { get; set; } = 70; // 70 normal
 
         public ContractionHierarchie(string inputFile, int edgeGroupSize)
         {
@@ -59,7 +57,6 @@ namespace ContractionHierarchies
             MaxSettledNodesImportance = maxSettledNodesImportance;
             MaxSettledNodesContraction = maxSettledNodesContraction;
             MaxWrongImportance = maxWrongImportance;
-            NewEdgesScaling = newEdgeScaling;
             ContNeighbScaling = contNeighbScaling;
             SearchSpaceScaling = searchSpaceScaling;
             EdgeDiffScaling = edgeDiffScaling;
@@ -159,8 +156,8 @@ namespace ContractionHierarchies
                 Edge edge = ProcessGraph.Edges[i];
                 ProcessNode neighborNode = ProcessGraph.Nodes[edge.Target];
                 neighborNode.ContractedNeighbors++;
-                int importance = CalculateImportance(neighborNode);
-                PriorityQueue.Enqueue(neighborNode, importance);
+                //int importance = CalculateImportance(neighborNode);
+                //PriorityQueue.Enqueue(neighborNode, importance);
             }
         }
 
@@ -192,7 +189,7 @@ namespace ContractionHierarchies
         {
             return ImportanceType switch
             {
-                1 => SimulationImportance(node, out int searchSpace), // simulation with dijkstra
+                1 => SimulationImportance(node, out int _ ), // simulation with dijkstra
                 2 => WeightImportance(node),
                 3 => CentralityImportance(node),
                 4 => NodeDegreeImportance(node), // in edges times out edges
@@ -207,7 +204,6 @@ namespace ContractionHierarchies
             int edgeDiff = -2 * (node.LastIndex - node.FirstIndex + 1) + newEdges * 2;
 
             int result = edgeDiff * EdgeDiffScaling;
-            result += newEdges * NewEdgesScaling;
             result += contractedNeighbors * ContNeighbScaling;
             result += searchSpace * SearchSpaceScaling;
             result += node.OriginalEdgesCount * OriginalEdgesScaling;
@@ -231,22 +227,7 @@ namespace ContractionHierarchies
         }
         private int NodeDegreeImportance(ProcessNode node) 
         {
-            int forward = 0;
-            int backward = 0;
-            // importance = incomming Edges * outgoing Edges
-            for (int i = node.FirstIndex; i <= node.LastIndex; i++)
-            {
-                Edge edge = ProcessGraph.Edges[i];
-                if (edge.Backward)
-                {
-                    backward++;
-                }
-                if (edge.Forward)
-                {
-                    forward++;
-                }
-            }
-            return forward * backward;
+            return node.LastIndex - node.FirstIndex + 1;
         }
 
         private void ContractNodeBiDir(ProcessNode node, bool simulate, out int searchSpace)

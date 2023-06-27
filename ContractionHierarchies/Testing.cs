@@ -28,8 +28,8 @@ namespace ContractionHierarchies
         /// </summary>
         public static void TestPerformancePreProcess(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
         {
-            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland.csv";
-            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
+            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
 
             // preprocess
             var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
