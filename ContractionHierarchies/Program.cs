@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 using ContractionHierarchies;
 using ContractionHierarchies.DataStructures;
 using Microsoft.VisualBasic.FileIO;
+using OsmSharp;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class Program
 {
      static void Main(string[] args)
      {
-        var maxSettledNodes = 20;
+        var maxSettledNodesImportance = 10;
+        var maxSettledNodesContraction = 10;
         var edgeGroupSize = 10;
         int importanceType = 0;
         int contractionType = 1;
@@ -20,7 +22,7 @@ class Program
         bool recalculateImportance = true;
         int maxWrongImportance = 5;
 
-        Testing.TestPerformancePreProcess(maxSettledNodes, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxWrongImportance);
+        Testing.TestPerformancePreProcess(maxSettledNodesImportance, maxSettledNodesContraction, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxWrongImportance);
         //Testing.TestCorrectnessBig(maxSettledNodes, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxWrongImportance);
         //Testing.CreateCSVQueries();
         //Testing.TestCorrectness();

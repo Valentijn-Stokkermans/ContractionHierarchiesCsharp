@@ -26,13 +26,14 @@ namespace ContractionHierarchies
         /// number of nodes that should be settled before placing a shortcut
         /// </para>
         /// </summary>
-        public static void TestPerformancePreProcess(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
+        public static void TestPerformancePreProcess(int maxSettledNodesImportance, int maxSettledNodesContraction,  int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
         {
-            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland.csv";
+            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland_ddsg.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland.csv";
             //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodesImportance, maxSettledNodesContraction, maxWrongImportance);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
             ch.PreProcess();
             ch.CreateSearchGraph();

@@ -21,13 +21,13 @@ namespace ContractionHierarchies
         int ContractionType { get; set; } = 1;
         int ContractionSearchType { get; set; } = 0;
         bool RecalculateImportance { get; set; } = true;
-        int MaxSettledNodesImportance { get; set; } = 100;
+        int MaxSettledNodesImportance { get; set; } = 145;
         int MaxSettledNodesContraction { get; set; } = 1000;
         int MaxWrongImportance { get; set; } = 10;
         int ContNeighbScaling { get; set; } = 120;
         int SearchSpaceScaling { get; set; } = 1;
         int EdgeDiffScaling { get; set; } = 190;
-        int OriginalEdgesScaling { get; set; } = 70; // 70 normal
+        int OriginalEdgesScaling { get; set; } = 600; // 70 normal
 
         public ContractionHierarchie(string inputFile, int edgeGroupSize)
         {
@@ -45,7 +45,7 @@ namespace ContractionHierarchies
         
         public ContractionHierarchie(string inputFile, int edgeGroupSize, int importanceType, int contractionType, 
             int contractionSearchType, bool recalculateImportance, int maxSettledNodesImportance, int maxSettledNodesContraction, int maxWrongImportance,
-            int newEdgeScaling, int contNeighbScaling, int searchSpaceScaling, int edgeDiffScaling, int originalEdgesScaling)
+            int contNeighbScaling, int searchSpaceScaling, int edgeDiffScaling, int originalEdgesScaling)
         {
             EdgeGroupSize = edgeGroupSize;
             ProcessGraph = new(inputFile, edgeGroupSize);
@@ -109,7 +109,7 @@ namespace ContractionHierarchies
             // take lowest priority and contract
             while (PriorityQueue.TryDequeue(out ProcessNode node, out int priority)) // recursief maken
             {
-                if (node.Contracted)
+                if (node.Contracted || node.LatestPriority != priority)
                 {
                     continue;
                 }
@@ -122,7 +122,7 @@ namespace ContractionHierarchies
                     {
                         int oldShortcutsAdded = TotalShortCutsAdded;
                         ContractNode(node, false);
-                        UpdateNeighbors(node);
+                        //UpdateNeighbors(node);
                         Console.WriteLine("contraction node: " + nodeLevel + " / " + ProcessGraph.NodesSize + " shortcuts added: " + (TotalShortCutsAdded - oldShortcutsAdded) + " total shortcuts: " + TotalShortCutsAdded + " total edges: " + (node.LastIndex - node.FirstIndex));
                         node.NodeLevel = nodeLevel;
                         nodeLevel++;
@@ -156,8 +156,8 @@ namespace ContractionHierarchies
                 Edge edge = ProcessGraph.Edges[i];
                 ProcessNode neighborNode = ProcessGraph.Nodes[edge.Target];
                 neighborNode.ContractedNeighbors++;
-                //int importance = CalculateImportance(neighborNode);
-                //PriorityQueue.Enqueue(neighborNode, importance);
+                int importance = CalculateImportance(neighborNode);
+                PriorityQueue.Enqueue(neighborNode, importance);
             }
         }
 
@@ -187,7 +187,7 @@ namespace ContractionHierarchies
 
         private int CalculateImportance(ProcessNode node)
         {
-            return ImportanceType switch
+            int priority = ImportanceType switch
             {
                 1 => SimulationImportance(node, out int _ ), // simulation with dijkstra
                 2 => WeightImportance(node),
@@ -195,6 +195,8 @@ namespace ContractionHierarchies
                 4 => NodeDegreeImportance(node), // in edges times out edges
                 _ => CombinedImportance(node),
             };
+            node.LatestPriority = priority;
+            return priority;
         }
 
         private int CombinedImportance(ProcessNode node)
@@ -203,10 +205,10 @@ namespace ContractionHierarchies
             int contractedNeighbors = node.ContractedNeighbors;
             int edgeDiff = -2 * (node.LastIndex - node.FirstIndex + 1) + newEdges * 2;
 
-            int result = edgeDiff * EdgeDiffScaling;
-            result += contractedNeighbors * ContNeighbScaling;
-            result += searchSpace * SearchSpaceScaling;
-            result += node.OriginalEdgesCount * OriginalEdgesScaling;
+            int result = edgeDiff * EdgeDiffScaling; // E 190
+            result += contractedNeighbors * ContNeighbScaling; // D 120
+            result += searchSpace * SearchSpaceScaling; // S 1
+            result += node.OriginalEdgesCount * OriginalEdgesScaling; // O 600
             // reach
             return result;
         }

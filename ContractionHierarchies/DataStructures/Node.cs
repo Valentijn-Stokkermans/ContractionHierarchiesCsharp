@@ -53,7 +53,6 @@ namespace ContractionHierarchies.DataStructures
         public int LastIndex { get; set; }
         // node index in processgraph nodes list
         public int ID { get; set; }
-
         // flag contracted
         public bool Contracted { get; set; } = false;
         // flag search target
@@ -63,6 +62,7 @@ namespace ContractionHierarchies.DataStructures
         // node id, index in nodes array
         public int ContractedNeighbors { get; set; } = 0;
         public int OriginalEdgesCount { get; set; } = 0;
+        public int LatestPriority { get; set; } = 0;
     }
 
     class SearchNodeEqualityComparer : IEqualityComparer<SearchNode>

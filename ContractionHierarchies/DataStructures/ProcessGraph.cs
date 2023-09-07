@@ -18,9 +18,76 @@ namespace ContractionHierarchies.DataStructures
         public ProcessGraph(string inputCSV, int edgeGroupSize) 
         {
             EdgeGroupSize = edgeGroupSize;
-            MakeGraphFromCSV(inputCSV);
+            //MakeGraphFromCSV(inputCSV);
+            MakeGraphFromCSVDelimiterSpace(inputCSV);
         }
 
+        public void MakeGraphFromCSVDelimiterSpace(string inputCSV)
+        {
+            // expects a csv file with source_id, target_id, weight, direction
+            // with id's starting at 0
+
+            // read all lines and store temporarily in fields
+            List<string[]> fields = new List<string[]> { };
+            using (TextFieldParser parser = new(inputCSV))
+            {
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(" ");
+                while (!parser.EndOfData)
+                {
+                    //Processing row
+                    fields.Add(parser.ReadFields());
+                }
+            }
+            fields.RemoveAt(0); // drop column description
+            int numberOfNodes = int.Parse(fields[0][0]);
+            //int numberOfEdges = int.Parse(fields[0][1]);
+            fields.RemoveAt(0); // drop second column description
+
+            // initialize the nodes and edges lists.
+            Nodes = new ProcessNode[numberOfNodes + 1];
+            Edges = new List<Edge>(numberOfNodes * EdgeGroupSize);
+
+            for (int i = 0; i <= numberOfNodes; i++)
+            {
+                Nodes[i] = new ProcessNode(i, i * EdgeGroupSize);
+                for (int j = 0; j < EdgeGroupSize; j++)
+                {
+                    Edges.Add(new Edge());
+                }
+            }
+
+            // fill nodes and edges lists
+            for (int i = 0; i < fields.Count; i++)
+            {
+                int source = int.Parse(fields[i][0]);
+                int target = int.Parse(fields[i][1]);
+                float weight = float.Parse(fields[i][2]);
+                int direction = int.Parse(fields[i][3]);
+
+                if (direction == 0) // both directions
+                {
+                    AddEdgeToProcessNode(Nodes[source], weight, target, true, true, true); // add forward edge
+                    Nodes[source].OriginalEdgesCount++;
+                    AddEdgeToProcessNode(Nodes[target], weight, source, true, true, true); // add backward edge
+                    Nodes[target].OriginalEdgesCount++;
+                }
+                else if (direction == 1) // only forward direction
+                {
+                    AddEdgeToProcessNode(Nodes[source], weight, target, true, false, true); // add forward edge
+                    Nodes[source].OriginalEdgesCount++;
+                    AddEdgeToProcessNode(Nodes[target], weight, source, false, true, true); // add backward edge
+                    Nodes[target].OriginalEdgesCount++;
+                }
+                else if (direction == 2) // only backward direction
+                {
+                    AddEdgeToProcessNode(Nodes[source], weight, target, false, true, true); // add forward edge
+                    Nodes[source].OriginalEdgesCount++;
+                    AddEdgeToProcessNode(Nodes[target], weight, source, true, false, true); // add backward edge
+                    Nodes[target].OriginalEdgesCount++;
+                }
+            }
+        }
         public void MakeGraphFromCSV(string inputCSV)
         {
             // expects a csv file with source_id, target_id, weight
