@@ -19,12 +19,11 @@ class Program
         int importanceType = 0;
         int contractionType = 1;
         int contractionSearchType = 0;
-        bool recalculateImportance = true;
-        int maxWrongImportance = 5;
 
-        Testing.TestPerformancePreProcess(maxSettledNodesImportance, maxSettledNodesContraction, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxWrongImportance);
+        //Testing.TestPerformanceQuery(maxSettledNodesImportance, maxSettledNodesContraction, edgeGroupSize, importanceType, contractionType, contractionSearchType);
         //Testing.TestCorrectnessBig(maxSettledNodes, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxWrongImportance);
         //Testing.CreateCSVQueries();
         //Testing.TestCorrectness();
+        Experiments.CppComparison();
     }
 } 

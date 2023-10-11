@@ -26,14 +26,16 @@ namespace ContractionHierarchies
         /// number of nodes that should be settled before placing a shortcut
         /// </para>
         /// </summary>
-        public static void TestPerformancePreProcess(int maxSettledNodesImportance, int maxSettledNodesContraction,  int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
+        public static void TestPerformancePreProcess(int maxSettledNodesImportance, int maxSettledNodesContraction,  int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType)
         {
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\example_graph_ddsg.csv";
             string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland_ddsg.csv";
-            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland.csv";
-            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\zeeland_ddsg.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\guadeloupe_ddsg.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\corse_ddsg.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodesImportance, maxSettledNodesContraction, maxWrongImportance);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, maxSettledNodesImportance, maxSettledNodesContraction);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
             ch.PreProcess();
             ch.CreateSearchGraph();
@@ -42,19 +44,27 @@ namespace ContractionHierarchies
             Console.WriteLine("Preprocessing time: " + elapsedMSPreprocessing);
         }
 
-        public static void TestPerformanceQuery(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
+        public static void TestPerformanceQuery(int maxSettledNodesImportance, int maxSettledNodesContraction, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType)
         {
-            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
-            string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\franceRoute500Query.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland_ddsg.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\zeeland_ddsg.csv";
+            //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\guadeloupe_ddsg.csv";
+            string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\corse_ddsg.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, maxSettledNodesImportance, maxSettledNodesContraction);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
             ch.PreProcess();
-            ch.CreateSearchGraph();
             watchPreprocessing.Stop();
             long elapsedMSPreprocessing = watchPreprocessing.ElapsedMilliseconds;
             Console.WriteLine("Preprocessing time: " + elapsedMSPreprocessing);
+            ch.CreateSearchGraph();
+
+            //string queryFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevolandQuery.csv";
+            //string queryFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\zeelandQuery.csv";
+            //string queryFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\guadeloupeQuery.csv";
+            string queryFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\corseQuery.csv";
+
             // read query file
             List<string[]> fields = new() { };
             using (TextFieldParser parser = new(queryFile))
@@ -70,15 +80,17 @@ namespace ContractionHierarchies
 
             // run queries
             var watchQuery = System.Diagnostics.Stopwatch.StartNew();
+            long elapsedMSQuery = 0;
             for (int i = 0; i < fields.Count; i++)
             {
                 int source = int.Parse(fields[i][0]);
                 int target = int.Parse(fields[i][1]);
-
+                
                 ch.QueryCH(source, target);
+                
             }
             watchQuery.Stop();
-            long elapsedMSQuery = watchQuery.ElapsedMilliseconds;
+            elapsedMSQuery += watchQuery.ElapsedMilliseconds;
             Console.WriteLine("Total query time: " + elapsedMSQuery + " over " + fields.Count + " queries, Average: " + (double)elapsedMSQuery / fields.Count);
         }
 
@@ -99,13 +111,13 @@ namespace ContractionHierarchies
         /// number of nodes that should be settled before placing a shortcut
         /// </para>
         /// </summary>
-        public static void TestCorrectnessBig(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType, bool recalculateImportance, int maxWrongImportance)
+        public static void TestCorrectnessBig(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType)
         {
             string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
             string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\franceRoute500QuerySmall.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, maxSettledNodes, maxSettledNodes);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
             ch.PreProcess();
             ch.CreateSearchGraph();
@@ -179,9 +191,7 @@ namespace ContractionHierarchies
             int importanceType = 1;
             int contractionType = 1;
             int contractionSearchType = 0;
-            bool recalculateImportance = true;
-            int maxWrongImportance = 10;
-            var ch = new ContractionHierarchie(file, edgeGroupSize, importanceType, contractionType, contractionSearchType, recalculateImportance, maxSettledNodes, maxSettledNodes, maxWrongImportance);
+            var ch = new ContractionHierarchie(file, edgeGroupSize, importanceType, contractionType, contractionSearchType, maxSettledNodes, maxSettledNodes);
             ch.PreProcess();
             ch.CreateSearchGraph();
 
@@ -213,10 +223,10 @@ namespace ContractionHierarchies
 
         public static void CreateCSVQueries()
         {
-            string filePath = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\franceRoute500Query.csv";
-            int rowCount = 10000; // number of queries to be made
+            string filePath = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\corseQuery.csv";
+            int rowCount = 1000; // number of queries to be made
             int minValue = 0;
-            int maxValue = 234614; // 234614 nodes in franceRoute500.csv, 3189645 nodes in netherlands.csv
+            int maxValue = 99684; //number of nodes: flevoland: 99106, zeeland: 100683, guadeloupe: 70364, corse: 99684
 
             using (StreamWriter sw = new(filePath))
             {

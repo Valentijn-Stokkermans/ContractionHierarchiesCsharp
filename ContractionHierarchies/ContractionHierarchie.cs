@@ -20,10 +20,8 @@ namespace ContractionHierarchies
         int ImportanceType { get; set; } = 1;
         int ContractionType { get; set; } = 1;
         int ContractionSearchType { get; set; } = 0;
-        bool RecalculateImportance { get; set; } = true;
         int MaxSettledNodesImportance { get; set; } = 145;
         int MaxSettledNodesContraction { get; set; } = 1000;
-        int MaxWrongImportance { get; set; } = 10;
         int ContNeighbScaling { get; set; } = 120;
         int SearchSpaceScaling { get; set; } = 1;
         int EdgeDiffScaling { get; set; } = 190;
@@ -44,7 +42,7 @@ namespace ContractionHierarchies
 
         
         public ContractionHierarchie(string inputFile, int edgeGroupSize, int importanceType, int contractionType, 
-            int contractionSearchType, bool recalculateImportance, int maxSettledNodesImportance, int maxSettledNodesContraction, int maxWrongImportance,
+            int contractionSearchType, int maxSettledNodesImportance, int maxSettledNodesContraction,
             int contNeighbScaling, int searchSpaceScaling, int edgeDiffScaling, int originalEdgesScaling)
         {
             EdgeGroupSize = edgeGroupSize;
@@ -53,10 +51,8 @@ namespace ContractionHierarchies
             ImportanceType = importanceType;
             ContractionType = contractionType;
             ContractionSearchType = contractionSearchType;
-            RecalculateImportance = recalculateImportance;
             MaxSettledNodesImportance = maxSettledNodesImportance;
             MaxSettledNodesContraction = maxSettledNodesContraction;
-            MaxWrongImportance = maxWrongImportance;
             ContNeighbScaling = contNeighbScaling;
             SearchSpaceScaling = searchSpaceScaling;
             EdgeDiffScaling = edgeDiffScaling;
@@ -81,12 +77,10 @@ namespace ContractionHierarchies
         /// false: do not recalculate the importance
         /// <paramref name="maxSettledNodes"/>
         /// number of nodes that should be settled before placing a shortcut
-        /// <paramref name="maxWrongImportance"/>
-        /// number of nodes that need to fail before we recalculate all nodes
         /// </para>
         /// </summary>
         public ContractionHierarchie(string inputFile, int edgeGroupSize, int importanceType, int contractionType,
-            int contractionSearchType, bool recalculateImportance, int maxSettledNodesImportance, int maxSettledNodesContraction, int maxWrongImportance)
+            int contractionSearchType, int maxSettledNodesImportance, int maxSettledNodesContraction)
         {
             EdgeGroupSize = edgeGroupSize;
             ProcessGraph = new(inputFile, edgeGroupSize);
@@ -94,18 +88,15 @@ namespace ContractionHierarchies
             ImportanceType = importanceType;
             ContractionType = contractionType;
             ContractionSearchType = contractionSearchType;
-            RecalculateImportance = recalculateImportance;
             MaxSettledNodesImportance = maxSettledNodesImportance;
             MaxSettledNodesContraction = maxSettledNodesContraction;
-            MaxWrongImportance = maxWrongImportance;
         }
 
-        public void PreProcess()
+        public int PreProcess()
         {
             // calculate importance for each node and fill priority queue
             int nodeLevel = 0;
             CalculateImportanceForAll(nodeLevel);
-
             // take lowest priority and contract
             while (PriorityQueue.TryDequeue(out ProcessNode node, out int priority)) // recursief maken
             {
@@ -114,51 +105,13 @@ namespace ContractionHierarchies
                     continue;
                 }
 
-                if (RecalculateImportance)
-                {
-                    int wrongImportance = 0;
-                    int importance = CalculateImportance(node);
-                    if (priority <= importance)
-                    {
-                        int oldShortcutsAdded = TotalShortCutsAdded;
-                        ContractNode(node, false);
-                        //UpdateNeighbors(node);
-                        Console.WriteLine("contraction node: " + nodeLevel + " / " + ProcessGraph.NodesSize + " shortcuts added: " + (TotalShortCutsAdded - oldShortcutsAdded) + " total shortcuts: " + TotalShortCutsAdded + " total edges: " + (node.LastIndex - node.FirstIndex));
-                        node.NodeLevel = nodeLevel;
-                        nodeLevel++;
-                    }
-                    else
-                    {
-                        wrongImportance++;
-                        if (wrongImportance > MaxWrongImportance)
-                        {
-                            CalculateImportanceForAll(nodeLevel);
-                            continue;
-                        }
-                        PriorityQueue.Enqueue(node, importance);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("contraction node: " + nodeLevel + " / " + ProcessGraph.NodesSize + " total shortcuts: " + TotalShortCutsAdded);
-                    ContractNode(node, false);
-                    node.NodeLevel = nodeLevel;
-                    nodeLevel++;
-                }
+                ContractNode(node, false);
+                node.NodeLevel = nodeLevel;
+                nodeLevel++;
             }
             Console.WriteLine("Total number of shortcuts added: " + TotalShortCutsAdded);
-        }
 
-        private void UpdateNeighbors(ProcessNode node)
-        {
-            for (int i = node.FirstIndex; i <= node.LastIndex; i++)
-            {
-                Edge edge = ProcessGraph.Edges[i];
-                ProcessNode neighborNode = ProcessGraph.Nodes[edge.Target];
-                neighborNode.ContractedNeighbors++;
-                int importance = CalculateImportance(neighborNode);
-                PriorityQueue.Enqueue(neighborNode, importance);
-            }
+            return TotalShortCutsAdded;
         }
 
         private void CalculateImportanceForAll(int nodeLevel)
