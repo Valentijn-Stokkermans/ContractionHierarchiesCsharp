@@ -17,8 +17,6 @@ namespace ContractionHierarchies
         /// <paramref name="contractionType"/>
         /// 0: BiDir speedup contraction
         /// 1: normal contraction
-        /// <paramref name="contractionSearchType"/>
-        /// 0: dijkstra
         /// <paramref name="recalculateImportance"/>
         /// true: check if the importance is still the smallest
         /// false: do not recalculate the importance
@@ -26,7 +24,7 @@ namespace ContractionHierarchies
         /// number of nodes that should be settled before placing a shortcut
         /// </para>
         /// </summary>
-        public static void TestPerformancePreProcess(int maxSettledNodesImportance, int maxSettledNodesContraction,  int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType)
+        public static void TestPerformancePreProcess(int maxSettledNodesImportance, int maxSettledNodesContraction,  int edgeGroupSize, int importanceType, int contractionType)
         {
             //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\example_graph_ddsg.csv";
             string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland_ddsg.csv";
@@ -35,7 +33,7 @@ namespace ContractionHierarchies
             //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\corse_ddsg.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, maxSettledNodesImportance, maxSettledNodesContraction);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, maxSettledNodesImportance, maxSettledNodesContraction);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
             ch.PreProcess();
             ch.CreateSearchGraph();
@@ -44,7 +42,7 @@ namespace ContractionHierarchies
             Console.WriteLine("Preprocessing time: " + elapsedMSPreprocessing);
         }
 
-        public static void TestPerformanceQuery(int maxSettledNodesImportance, int maxSettledNodesContraction, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType)
+        public static void TestPerformanceQuery(int maxSettledNodesImportance, int maxSettledNodesContraction, int edgeGroupSize, int importanceType, int contractionType)
         {
             //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\flevoland_ddsg.csv";
             //string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\zeeland_ddsg.csv";
@@ -52,7 +50,7 @@ namespace ContractionHierarchies
             string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\corse_ddsg.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, maxSettledNodesImportance, maxSettledNodesContraction);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, maxSettledNodesImportance, maxSettledNodesContraction);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
             ch.PreProcess();
             watchPreprocessing.Stop();
@@ -102,8 +100,6 @@ namespace ContractionHierarchies
         /// <paramref name="contractionType"/>
         /// 0: BiDir speedup contraction
         /// 1: normal contraction
-        /// <paramref name="contractionSearchType"/>
-        /// 0: dijkstra
         /// <paramref name="recalculateImportance"/>
         /// true: check if the importance is still the smallest
         /// false: do not recalculate the importance
@@ -111,13 +107,13 @@ namespace ContractionHierarchies
         /// number of nodes that should be settled before placing a shortcut
         /// </para>
         /// </summary>
-        public static void TestCorrectnessBig(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType, int contractionSearchType)
+        public static void TestCorrectnessBig(int maxSettledNodes, int edgeGroupSize, int importanceType, int contractionType)
         {
             string graphFile = @"C:\\Users\\Valentijn\\source\\repos\\ContractionHierarchies\\ContractionHierarchies\\Data\\franceRoute500.csv";
             string queryFile = @"C:\Users\Valentijn\source\repos\ContractionHierarchies\ContractionHierarchies\Data\franceRoute500QuerySmall.csv";
 
             // preprocess
-            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, contractionSearchType, maxSettledNodes, maxSettledNodes);
+            var ch = new ContractionHierarchie(graphFile, edgeGroupSize, importanceType, contractionType, maxSettledNodes, maxSettledNodes);
             var watchPreprocessing = System.Diagnostics.Stopwatch.StartNew();
             ch.PreProcess();
             ch.CreateSearchGraph();
@@ -190,8 +186,7 @@ namespace ContractionHierarchies
             var edgeGroupSize = 10;
             int importanceType = 1;
             int contractionType = 1;
-            int contractionSearchType = 0;
-            var ch = new ContractionHierarchie(file, edgeGroupSize, importanceType, contractionType, contractionSearchType, maxSettledNodes, maxSettledNodes);
+            var ch = new ContractionHierarchie(file, edgeGroupSize, importanceType, contractionType, maxSettledNodes, maxSettledNodes);
             ch.PreProcess();
             ch.CreateSearchGraph();
 
