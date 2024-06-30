@@ -97,12 +97,21 @@ namespace ContractionHierarchies
             {
                 if (node.Contracted || node.LatestPriority != priority)
                 {
+                    // old duplicate, skip
                     continue;
                 }
-
-                ContractNode(node, false);
-                node.NodeLevel = nodeLevel;
-                nodeLevel++;
+                int newPriority = CalculateImportance(node);
+                if (newPriority > priority)
+                {
+                    // no longer lowest
+                    PriorityQueue.Enqueue(node, newPriority);
+                } 
+                else
+                {
+                    ContractNode(node, false);
+                    node.NodeLevel = nodeLevel;
+                    nodeLevel++;
+                }
             }
             Console.WriteLine("Total number of shortcuts added: " + TotalShortCutsAdded);
 
