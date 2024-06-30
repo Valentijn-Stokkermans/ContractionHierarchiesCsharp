@@ -1,4 +1,9 @@
-flevoland,43271,0.065,590
-zeeland,118587,0.249,5004
-guadeloupe,116315,0.519,31570
-corse,34800,0.049,335
+Graph,Shortcuts,AvgQueryTime,ConstructionTime
+flevoland,87898,0.05,6560
+zeeland,577166,0.127,41171
+guadeloupe,1373776,0.31,91595
+corse,65970,0.046,5726
+flevoland,137615,0.05,446
+zeeland,870708,0.094,2085
+guadeloupe,5087989,0.294,16072
+corse,80031,0.047,370
