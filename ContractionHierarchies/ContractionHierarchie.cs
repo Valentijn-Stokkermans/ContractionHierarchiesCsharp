@@ -100,10 +100,10 @@ namespace ContractionHierarchies
                     // old duplicate, skip
                     continue;
                 }
+
                 int newPriority = CalculateImportance(node);
-                if (newPriority > priority)
+                if (PriorityQueue.Count > 0 && newPriority > priority)
                 {
-                    // no longer lowest
                     PriorityQueue.Enqueue(node, newPriority);
                 } 
                 else

@@ -1,9 +1,9 @@
 Graph,Shortcuts,AvgQueryTime,ConstructionTime
-flevoland,87898,0.05,6560
-zeeland,577166,0.127,41171
-guadeloupe,1373776,0.31,91595
-corse,65970,0.046,5726
-flevoland,137615,0.05,446
-zeeland,870708,0.094,2085
-guadeloupe,5087989,0.294,16072
-corse,80031,0.047,370
+flevoland,54589,0.049,5396
+zeeland,91818,0.052,12197
+guadeloupe,63438,0.044,8945
+corse,44389,0.046,6050
+flevoland,61812,0.048,464
+zeeland,104757,0.051,806
+guadeloupe,84523,0.044,717
+corse,45202,0.046,418
