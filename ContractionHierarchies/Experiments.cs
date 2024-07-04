@@ -174,7 +174,7 @@ namespace ContractionHierarchies
             maxSettledNodesImportance = 20;
             maxSettledNodesContraction = 20;
             edgeGroupSize = 10;
-            importanceType = 1;
+            importanceType = 6;
             contractionType = 1;
 
             results = Experiment(maxSettledNodesImportance, maxSettledNodesContraction, edgeGroupSize, importanceType, contractionType);

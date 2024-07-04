@@ -22,6 +22,7 @@ namespace ContractionHierarchies
         int ContractionType { get; set; } = 1;
         int MaxSettledNodesImportance { get; set; } = 145;
         int MaxSettledNodesContraction { get; set; } = 1000;
+        int NewEdgesScaling { get; set; } = 1;
         int ContNeighbScaling { get; set; } = 120;
         int SearchSpaceScaling { get; set; } = 1;
         int EdgeDiffScaling { get; set; } = 190;
@@ -152,6 +153,7 @@ namespace ContractionHierarchies
                 3 => ContractedNeighbors(node),
                 4 => OriginalEdges(node), // in edges times out edges
                 5 => SearchSpace(node),
+                6 => NewEdgesSearchSpace(node),
                 _ => SearchSpace(node),
             };
             node.LatestPriority = priority;
@@ -168,8 +170,9 @@ namespace ContractionHierarchies
             int newEdges = ContractNodeNormal(node, true, out int searchSpace);
             int edgeDiff = -2 * (node.LastIndex - node.FirstIndex + 1) + newEdges * 2;
 
-            int result = edgeDiff * EdgeDiffScaling; // E 190
-            // reach
+            int result = newEdges * NewEdgesScaling; // 1
+            result += edgeDiff * EdgeDiffScaling; // E 190
+
             return result;
         }
 
@@ -179,9 +182,10 @@ namespace ContractionHierarchies
             int edgeDiff = -2 * (node.LastIndex - node.FirstIndex + 1) + newEdges * 2;
             int contractedNeighbors = node.ContractedNeighbors;
 
-            int result = edgeDiff * EdgeDiffScaling; // E 190
+            int result = newEdges * NewEdgesScaling; // 1
+            result += edgeDiff * EdgeDiffScaling; // E 190
             result += contractedNeighbors * ContNeighbScaling; // D 120
-            // reach
+
             return result;
         }
 
@@ -191,8 +195,17 @@ namespace ContractionHierarchies
             int contractedNeighbors = node.ContractedNeighbors;
             int edgeDiff = -2 * (node.LastIndex - node.FirstIndex + 1) + newEdges * 2;
 
-            int result = edgeDiff * EdgeDiffScaling; // E 190
+            int result = newEdges * NewEdgesScaling; // 1
+            result += edgeDiff * EdgeDiffScaling; // E 190
             result += contractedNeighbors * ContNeighbScaling; // D 120
+            result += searchSpace * SearchSpaceScaling; // S 1
+            return result;
+        }
+
+        private int NewEdgesSearchSpace(ProcessNode node)
+        {
+            int result = ContractNodeNormal(node, true, out int searchSpace);
+            result = result * NewEdgesScaling * 10;
             result += searchSpace * SearchSpaceScaling; // S 1
             return result;
         }
